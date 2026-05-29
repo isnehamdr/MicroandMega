@@ -1,4 +1,3 @@
-
 // import { Link, usePage } from '@inertiajs/react'
 // import React, { useState, useEffect, useRef } from 'react'
 
@@ -68,8 +67,6 @@
 //     return () => window.removeEventListener('scroll', onScroll)
 //   }, [])
 
-//   // Static product categories for dropdown (no backend fetch)
-
 //   useEffect(() => {
 //     const handler = (e) => {
 //       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
@@ -91,8 +88,13 @@
 //     return () => { document.body.style.overflow = '' }
 //   }, [mobileOpen])
 
-//   const isActive = (path) =>
-//     path === '/' ? url === '/' : url.startsWith(path)
+//   // FIX: use exact match for '/', otherwise check that the URL
+//   // starts with the path AND the next character is '/' or end-of-string.
+//   // This prevents '/service' from matching '/service-ticket'.
+//   const isActive = (path) => {
+//     if (path === '/') return url === '/'
+//     return url === path || url.startsWith(path + '/') || url.startsWith(path + '?')
+//   }
 
 //   return (
 //     <>
@@ -121,20 +123,10 @@
 //         >
 
 //           {/* ── Logo ──────────────────────────────────────────── */}
-//               <Link href="/" className="flex items-center gap-2 flex-shrink-0 no-underline">
-//             {/* <div className="w-8 h-8 lg:w-10 lg:h-10 bg-[#bb1403] rounded-full flex items-center justify-center flex-shrink-0">
-//               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 lg:w-5 lg:h-5">
-//                 <circle cx="12" cy="12" r="5" stroke="#fff" strokeWidth="2"/>
-//                 <circle cx="12" cy="12" r="2" fill="#fff"/>
-//                 <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-//               </svg>
-//             </div> */}
+//           <Link href="/" className="flex items-center gap-2 flex-shrink-0 no-underline">
 //             <div className="border border-[#bb1403] rounded-full flex items-center justify-center flex-shrink-0 ">
-//             <img className='sm:w-14 sm:h-14 w-10 h-10 rounded-full' src="/images/logo.png" alt="" />
+//               <img className='sm:w-14 sm:h-14 w-10 h-10 rounded-full' src="/images/logo.png" alt="" />
 //             </div>
-//             {/* <span className="font-extrabold text-base lg:text-xl text-[#0d1220] tracking-tight leading-none">
-//               Micro&amp;Mega
-//             </span> */}
 //           </Link>
 
 //           {/* ── Desktop nav ────────────────────────────────────── */}
@@ -154,7 +146,6 @@
 //                   {dropdownOpen && (
 //                     <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 min-w-[260px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
 //                       <div className="h-[3px] bg-[#bb1403]" />
-//                       {/* FIX: fixed max height with scroll */}
 //                       <ul className="py-1.5 m-0 p-0 list-none max-h-[340px] overflow-y-auto">
 //                         {productMenu.map((sub) => (
 //                           <li key={sub.label}>
@@ -208,9 +199,7 @@
 //         </div>
 //       </div>
 
-//       {/* ── Mobile menu — full-screen overlay ─────────────────────
-//            Rendered outside the fixed navbar so it truly fills the
-//            viewport from top to bottom.                            */}
+//       {/* ── Mobile menu — full-screen overlay ───────────────────── */}
 //       {mobileOpen && (
 //         <div
 //           className="lg:hidden fixed inset-0 z-[60] flex flex-col bg-white"
@@ -218,21 +207,11 @@
 //         >
 //           {/* Header row */}
 //           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 flex-shrink-0">
-//               <Link href="/" className="flex items-center gap-2 flex-shrink-0 no-underline">
-//             {/* <div className="w-8 h-8 lg:w-10 lg:h-10 bg-[#bb1403] rounded-full flex items-center justify-center flex-shrink-0">
-//               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 lg:w-5 lg:h-5">
-//                 <circle cx="12" cy="12" r="5" stroke="#fff" strokeWidth="2"/>
-//                 <circle cx="12" cy="12" r="2" fill="#fff"/>
-//                 <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
-//               </svg>
-//             </div> */}
-// <div className="border border-[#bb1403] rounded-full  flex items-center justify-center flex-shrink-0 ">
-//             <img className='w-12 h-12 rounded-full' src="/images/logo.png" alt="" />
-//             </div>         
-//                {/* <span className="font-extrabold text-base lg:text-xl text-[#0d1220] tracking-tight leading-none">
-//               Micro&amp;Mega
-//             </span> */}
-//           </Link>
+//             <Link href="/" className="flex items-center gap-2 flex-shrink-0 no-underline">
+//               <div className="border border-[#bb1403] rounded-full flex items-center justify-center flex-shrink-0 ">
+//                 <img className='w-12 h-12 rounded-full' src="/images/logo.png" alt="" />
+//               </div>
+//             </Link>
 //             <button
 //               onClick={() => setMobileOpen(false)}
 //               className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -328,6 +307,7 @@ const NAV_LINKS = [
   { label: 'Services',           path: '/service' },
   { label: 'Projects', path: '/projects-page' },
   { label: 'Contact Us',         path: '/contact' },
+  { label: 'Add To Cart',         path: '/add-to-cart', isIcon: true, iconSrc: '/images/cart.png' },
 ]
 
 const ChevronDown = ({ open }) => (
@@ -349,6 +329,10 @@ const CloseIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
   </svg>
+)
+
+const CartIcon = ({ src }) => (
+  <img src={src} alt="cart" className="w-6 h-6 object-contain" />
 )
 
 export default function Navbar() {
@@ -461,6 +445,15 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
+              ) : item.isIcon ? (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`px-3 py-2 rounded-lg transition-colors no-underline flex items-center justify-center
+                    ${isActive(item.path) ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+                >
+                  <CartIcon src={item.iconSrc} />
+                </Link>
               ) : (
                 <Link
                   key={item.label}
@@ -546,6 +539,14 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
+              ) : item.isIcon ? (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className="px-3 py-3 flex items-center justify-start no-underline"
+                >
+                  <CartIcon src={item.iconSrc} />
+                </Link>
               ) : (
                 <Link
                   key={item.label}

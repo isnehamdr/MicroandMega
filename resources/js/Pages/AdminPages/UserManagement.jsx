@@ -157,7 +157,7 @@ const UserManagement = () => {
                                         {user.image_url ? (
                                             <img 
                                                src={`${imgurl}/${user.image}`}
-                                            // src={user.image}
+                                            // src={user.image} 
 
                                                 alt={user.name}
                                                 onError={handleImageError}

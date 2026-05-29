@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\HeroSectionController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ServiceTicketController;
 use Illuminate\Support\Facades\Response;
@@ -16,6 +17,7 @@ use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 use App\Models\Product;
 use App\Models\Project;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -36,8 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-
-
+   
         Route::get('/category', function () {
     return Inertia::render('AdminPages/Category');
 });
@@ -56,6 +57,20 @@ Route::middleware('auth')->group(function () {
     return Inertia::render('AdminPages/ServiceTicket');
 });
 
+  Route::get('/hero-section', function () {
+    return Inertia::render('AdminPages/HeroSection');
+});
+
+
+   Route::get('/hero-section', [HeroSectionController::class, 'index'])->name('admin.hero');
+    Route::post('/hero', [HeroSectionController::class, 'store'])->name('admin.hero.store');
+    Route::put('/hero/{heroSection}', [HeroSectionController::class, 'update'])->name('admin.hero.update');
+    Route::delete('/hero/{heroSection}', [HeroSectionController::class, 'destroy'])->name('admin.hero.destroy');
+    Route::post('/hero/reorder', [HeroSectionController::class, 'reorder'])->name('admin.hero.reorder');
+
+
+
+
     Route::post('/ourprojects', [ProjectController::class, 'store'])->name('ourprojects.store');
     Route::put('/ourprojects/{id}', [ProjectController::class, 'update'])->name('ourprojects.update');
     Route::delete('/ourprojects/{id}', [ProjectController::class, 'destroy'])->name('ourprojects.destroy');
@@ -70,6 +85,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/ourproducts/{id}', [ProductController::class, 'destroy'])
         ->name('ourproducts.destroy');
 
+        
+
     // Product Categories (Admin)
     Route::prefix('ourproductcategories')->group(function () {
         Route::post('/', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
@@ -78,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}/images/{imageId}', [ProductCategoryController::class, 'destroyImage'])
             ->name('ourproductcategories.images.destroy');
     });
+    
 
      Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');       
     Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');      
@@ -162,6 +180,8 @@ Route::get('/ourtestimonials', [TestimonialController::class, 'index'])->name('o
         return Inertia::render('About');
     });
 
+ 
+
 
      Route::get('/service',function(){
         return Inertia::render('Service');
@@ -201,6 +221,9 @@ Route::get('/project-details/{slug}', [ProjectController::class, 'showPage'])->n
 Route::post('/service-tickets', [ServiceTicketController::class, 'store'])->name('service-tickets.store');
 
 
+   Route::get('/add-to-cart',function(){
+        return Inertia::render('AddToCart');
+    });
 
 
 
