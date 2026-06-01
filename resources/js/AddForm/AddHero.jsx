@@ -1,466 +1,354 @@
-import { Link } from '@inertiajs/react'
-import { useState, useEffect, useCallback, useRef } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+// AddHero.jsx
+import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-// Register ScrollTrigger plugin
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger)
-}
+const imgurl = import.meta.env.VITE_IMAGE_PATH;
+const AddHero = ({ showForm, setShowForm, editingHero, setEditingHero, setReloadTrigger, handleUpdate, allHero = [] }) => {
+    const [submitting, setSubmitting] = useState(false);
+    const [heroForm, setHeroForm] = useState({
+        title: "",
+        tag: "",
+        description: "",
+        image: null,
+        button_text: "Get Started",
+        button_link: "/contact",
+        is_active: true,
+        order: 0
+    });
 
-const SLIDES = [
-  {
-    id: 1,
-    bg: '/images/hero2.jpg',
-    tag: 'Premium Security Solutions',
-    title: 'Advanced Protection for Your Assets',
-    desc: 'State-of-the-art security systems designed to protect what matters most. From surveillance to access control, we deliver comprehensive solutions for businesses and homes across Nepal.',
-    ctaLink: '/products',
-    video: false,
-  },
-  {
-    id: 2,
-    bg: '/images/hero3.jpg',
-    tag: 'Smart Automation',
-    title: 'Intelligent Systems That Work For You',
-    desc: 'Experience the future of living and working with our IoT and automation solutions. Smart lighting, climate control, and energy monitoring at your fingertips.',
-    ctaLink: '/iot-automation',
-    video: false,
-  },
-  {
-    id: 3,
-    bg: '/images/hero4.jpg',
-    tag: 'Fire Safety First',
-    title: 'Early Detection, Rapid Response',
-    desc: 'Protect lives and property with our advanced fire detection and suppression systems. Compliant with international safety standards and tailored for Nepali infrastructure.',
-    ctaLink: '/fire-safety',
-    video: false,
-  },
-]
-
-const FEATURES = [
-  {
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" width="56" height="56">
-        <rect x="3" y="10" width="32" height="22" rx="3" stroke="#dc2626" strokeWidth="2" />
-        <circle cx="19" cy="21" r="6" stroke="#dc2626" strokeWidth="2" />
-        <circle cx="19" cy="21" r="2.5" fill="#dc2626" />
-        <path d="M35 13 L45 9 L45 33 L35 29" stroke="#dc2626" strokeWidth="2" strokeLinejoin="round" />
-      </svg>
-    ),
-    iconSmall: (
-      <svg viewBox="0 0 48 48" fill="none" width="44" height="44">
-        <rect x="3" y="10" width="32" height="22" rx="3" stroke="#dc2626" strokeWidth="2" />
-        <circle cx="19" cy="21" r="6" stroke="#dc2626" strokeWidth="2" />
-        <circle cx="19" cy="21" r="2.5" fill="#dc2626" />
-        <path d="M35 13 L45 9 L45 33 L35 29" stroke="#dc2626" strokeWidth="2" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: 'Integrated Surveillance & Security',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" width="56" height="56">
-        <path d="M8 42 C8 30 14 26 16 16 C18 26 13 34 20 28 C22 34 20 42 8 42 Z" stroke="#dc2626" strokeWidth="1.8" strokeLinejoin="round" />
-        <line x1="30" y1="4" x2="30" y2="12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <line x1="23" y1="12" x2="37" y2="12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <path d="M24 16 L22 23" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M30 16 L30 24" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M36 16 L38 23" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M27 36 C27 29 30 25 34 25 C38 25 41 29 41 36 L41 39 L27 39 Z" stroke="#dc2626" strokeWidth="1.8" />
-        <line x1="25" y1="39" x2="43" y2="39" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="34" cy="42" r="2" fill="#dc2626" />
-        <path d="M43 28 Q46 32 43 36" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M45 25 Q50 32 45 39" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-    iconSmall: (
-      <svg viewBox="0 0 48 48" fill="none" width="44" height="44">
-        <path d="M8 42 C8 30 14 26 16 16 C18 26 13 34 20 28 C22 34 20 42 8 42 Z" stroke="#dc2626" strokeWidth="1.8" strokeLinejoin="round" />
-        <line x1="30" y1="4" x2="30" y2="12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <line x1="23" y1="12" x2="37" y2="12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <path d="M24 16 L22 23" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M30 16 L30 24" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M36 16 L38 23" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M27 36 C27 29 30 25 34 25 C38 25 41 29 41 36 L41 39 L27 39 Z" stroke="#dc2626" strokeWidth="1.8" />
-        <line x1="25" y1="39" x2="43" y2="39" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="34" cy="42" r="2" fill="#dc2626" />
-        <path d="M43 28 Q46 32 43 36" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M45 25 Q50 32 45 39" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-    label: 'Fire Detection & Suppression',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" width="56" height="56">
-        <path d="M24 8C18 8 14 12.5 14 18C14 22 16 25 18 27V31C18 32.1 18.9 33 20 33H28C29.1 33 30 32.1 30 31V27C32 25 34 22 34 18C34 12.5 30 8 24 8Z" stroke="#dc2626" strokeWidth="2" fill="none"/>
-        <path d="M19 37H29" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M21 41H27" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="24" cy="21" r="2" fill="#dc2626"/>
-        <path d="M38 14L42 18M42 14L38 18" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M6 14L10 18M10 14L6 18" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M8 30C8 30 12 36 24 36C36 36 40 30 40 30" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" fill="none"/>
-      </svg>
-    ),
-    iconSmall: (
-      <svg viewBox="0 0 48 48" fill="none" width="44" height="44">
-        <path d="M24 10C18.5 10 15 14 15 19C15 22.5 17 25 18.5 27V31C18.5 32.1 19.4 33 20.5 33H27.5C28.6 33 29.5 32.1 29.5 31V27C31 25 33 22.5 33 19C33 14 29.5 10 24 10Z" stroke="#dc2626" strokeWidth="2" fill="none"/>
-        <path d="M20 37H28" stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
-        <circle cx="24" cy="20" r="2" fill="#dc2626"/>
-        <path d="M36 16L39 19M39 16L36 19" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M12 16L9 19M9 16L12 19" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-    label: 'Smart Lighting & Automation',
-  },
-]
-
-const DiscoverBtn = ({ href = '/contact' }) => (
-  <Link
-    href={href}
-    className="inline-flex items-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white px-8 py-3 rounded-md text-md font-semibold no-underline transition-all duration-200 hover:scale-105 hover:shadow-lg"
-  >
-    Get Started
-    <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
-      <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </Link>
-);
-
-export default function Hero() {
-  const [current, setCurrent] = useState(0)
-  const heroRef = useRef(null)
-  const contentRef = useRef(null)
-  const tagRef = useRef(null)
-  const titleRef = useRef(null)
-  const descRef = useRef(null)
-  const ctaRef = useRef(null)
-  const cardsRef = useRef(null)
-  const redBarRef = useRef(null)
-
-  const next = useCallback(() => setCurrent((c) => (c + 1) % SLIDES.length), [])
-  const prev = useCallback(() => setCurrent((c) => (c - 1 + SLIDES.length) % SLIDES.length), [])
-
-  useEffect(() => {
-    const t = setInterval(next, 6000)
-    return () => clearInterval(t)
-  }, [next])
-
-  const slide = SLIDES[current]
-
-  // GSAP Animations
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const ctx = gsap.context(() => {
-      // Set initial states
-      gsap.set([tagRef.current, titleRef.current, descRef.current, ctaRef.current], {
-        opacity: 0,
-        y: 30,
-      })
-      
-      gsap.set(redBarRef.current, {
-        scaleY: 0,
-        transformOrigin: 'top',
-      })
-      
-      gsap.set(cardsRef.current, {
-        opacity: 0,
-        y: 50,
-      })
-
-      // Animate red accent bar
-      gsap.to(redBarRef.current, {
-        scaleY: 1,
-        duration: 0.8,
-        ease: 'power2.out',
-        delay: 0.2,
-      })
-
-      // Animate content with stagger
-      const tl = gsap.timeline()
-      tl.to(tagRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-      .to(titleRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-      }, '-=0.3')
-      .to(descRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-      }, '-=0.4')
-      .to(ctaRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        ease: 'back.out(0.8)',
-      }, '-=0.3')
-
-      // Animate background with subtle scale on load
-      const bgImage = document.querySelector('.hero-bg-image')
-      if (bgImage) {
-        gsap.fromTo(bgImage,
-          { scale: 1.1 },
-          { scale: 1, duration: 1.2, ease: 'power2.out' }
-        )
-      }
-
-      // ScrollTrigger for feature cards
-      if (cardsRef.current) {
-        ScrollTrigger.create({
-          trigger: cardsRef.current,
-          start: 'top 85%',
-          end: 'top 65%',
-          onEnter: () => {
-            gsap.to(cardsRef.current, {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-              ease: 'back.out(0.6)',
-            })
-          },
-          once: true,
-        })
-      }
-
-      // Parallax effect on scroll for hero background
-      if (heroRef.current) {
-        ScrollTrigger.create({
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1,
-          onUpdate: (self) => {
-            const progress = self.progress
-            const bgElement = document.querySelector('.hero-bg-image')
-            if (bgElement) {
-              gsap.set(bgElement, {
-                y: progress * 150,
-                scale: 1 + progress * 0.1,
-              })
+    // Use Effect for editing
+    useEffect(() => {
+        if (editingHero) {
+            setHeroForm({
+                title: editingHero.title || "",
+                tag: editingHero.tag || "",
+                description: editingHero.description || "",
+                image: null,
+                button_text: editingHero.button_text || "Get Started",
+                button_link: editingHero.button_link || "/contact",
+                is_active: editingHero.is_active === 1 || editingHero.is_active === true,
+                order: editingHero.order || 0
+            });
+        } else {
+            // For new hero, find the smallest available order number
+            let suggestedOrder = 1;
+            const existingOrders = allHero.map(hero => parseInt(hero.order) || 0).sort((a, b) => a - b);
+            
+            // Find the first gap in orders
+            for (let i = 1; i <= existingOrders.length + 1; i++) {
+                if (!existingOrders.includes(i)) {
+                    suggestedOrder = i;
+                    break;
+                }
             }
-          },
-        })
-      }
-
-      // Subtle fade effect on scroll for hero content
-      if (heroRef.current && contentRef.current) {
-        ScrollTrigger.create({
-          trigger: heroRef.current,
-          start: 'top top',
-          end: 'bottom 20%',
-          scrub: 1,
-          onUpdate: (self) => {
-            const progress = self.progress
-            gsap.set(contentRef.current, {
-              opacity: 1 - progress * 0.5,
-              y: progress * 50,
-            })
-          },
-        })
-      }
-
-    }, heroRef)
-
-    return () => {
-      ctx.revert()
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill())
-    }
-  }, [])
-
-  // Animate slide transitions
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Animate content out and in for slide changes
-      gsap.to([tagRef.current, titleRef.current, descRef.current, ctaRef.current], {
-        opacity: 0,
-        y: -20,
-        duration: 0.3,
-        stagger: 0.05,
-        onComplete: () => {
-          gsap.to([tagRef.current, titleRef.current, descRef.current, ctaRef.current], {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'back.out(0.6)',
-          })
+            
+            setHeroForm({
+                title: "",
+                tag: "",
+                description: "",
+                image: null,
+                button_text: "Get Started",
+                button_link: "/contact",
+                is_active: true,
+                order: suggestedOrder
+            });
         }
-      })
+    }, [editingHero, allHero]);
 
-      // Animate background transition
-      const bgImage = document.querySelector('.hero-bg-image')
-      if (bgImage) {
-        gsap.fromTo(bgImage,
-          { scale: 1.1 },
-          { scale: 1, duration: 0.8, ease: 'power2.out' }
-        )
-      }
+    // Handle Create Hero
+    const handleCreate = async (formData) => {
+        try {
+            await axios.post(route("ourhero.store"), formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            setReloadTrigger((prev) => !prev);
+        } catch (error) {
+            console.log("Error creating hero", error);
+            throw error;
+        }
+    };
 
-    }, [current])
+    // Handle Submit
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        // Validate image is required for new hero
+        if (!editingHero && !heroForm.image) {
+            alert("Please select an image");
+            return;
+        }
+        
+        const formData = new FormData();
+        
+        // Append all form data
+        for (const key in heroForm) {
+            if (heroForm[key] !== null && heroForm[key] !== "") {
+                if (key === 'is_active') {
+                    formData.append(key, heroForm[key] ? '1' : '0');
+                } else if (key === 'order') {
+                    const orderValue = parseInt(heroForm[key]);
+                    formData.append(key, isNaN(orderValue) ? 0 : orderValue);
+                } else if (key !== 'image') {
+                    formData.append(key, heroForm[key]);
+                }
+            }
+        }
+        
+        // Append image separately if it exists
+        if (heroForm.image) {
+            formData.append('image', heroForm.image);
+        }
+        
+        try {
+            setSubmitting(true);
+            
+            if (editingHero) {
+                await handleUpdate(formData, editingHero.id);
+            } else {
+                await handleCreate(formData);
+            }
+            
+            // Reset form and close modal
+            setHeroForm({
+                title: "",
+                tag: "",
+                description: "",
+                image: null,
+                button_text: "Get Started",
+                button_link: "/contact",
+                is_active: true,
+                order: 0
+            });
+            setShowForm(false);
+            setEditingHero(null);
+            alert(editingHero ? "Hero updated successfully!" : "Hero created successfully!");
+        } catch (error) {
+            console.log("Error saving data", error);
+            alert("Error saving hero section. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-    return () => ctx.revert()
-  }, [current])
+    // Handle change for all inputs including image
+    const handleChange = (e) => {
+        const { name, value, type, files, checked } = e.target;
+        setHeroForm((prev) => ({
+            ...prev,
+            [name]: type === "file" ? files[0] : type === "checkbox" ? checked : value,
+        }));
+    };
 
-  // Manual navigation handlers
-  const handlePrev = () => prev()
-  const handleNext = () => next()
-
-  return (
-    <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-      />
-
-      <div ref={heroRef} className="relative font-['Inter',sans-serif] mb-0 md:mb-[90px]">
-
-        <div className="relative w-full min-h-[700px] md:min-h-[940px] h-auto md:h-screen overflow-hidden">
-
-          {/* Background Image */}
-          <div
-            className="hero-bg-image absolute inset-0 bg-center bg-cover md:bg-cover bg-no-repeat transition-all duration-700"
-            style={{
-              backgroundImage: `url(${slide.bg})`,
-            }}
-          />
-
-          {/* Dark overlay - matching product form modal styling */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40" />
-
-          {/* Red left accent bar - using dc2626 color from product form */}
-          <div 
-            ref={redBarRef}
-            className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#dc2626]"
-          />
-
-          {/* Slide content */}
-          <div 
-            ref={contentRef}
-            className="relative z-10 h-full flex flex-col justify-center px-4 md:px-8 max-w-7xl mx-auto pt-52 pb-20 md:pt-0 md:pb-0"
-          >
-
-            {/* Tag */}
-            <div 
-              ref={tagRef}
-              className="flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-white/80 uppercase mb-2"
-            >
-              <span className="inline-block w-6 h-0.5 bg-[#dc2626] rounded-full" />
-              <svg viewBox="0 0 18 18" fill="none" width="14" height="14">
-                <rect x="1" y="1" width="7" height="7" rx="1" fill="#dc2626" opacity="0.7" />
-                <rect x="10" y="1" width="7" height="7" rx="1" fill="#dc2626" />
-                <rect x="1" y="10" width="7" height="7" rx="1" fill="#dc2626" />
-                <rect x="10" y="10" width="7" height="7" rx="1" fill="#dc2626" opacity="0.7" />
-              </svg>
-              {slide.tag}
+    if (!showForm) return null;
+    
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {editingHero ? "Edit Hero Section" : "Add New Hero Section"}
+                    </h2>
+                    <button
+                        onClick={() => {
+                            setShowForm(false);
+                            setEditingHero(null);
+                        }}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Order Field */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Display Order *
+                        </label>
+                        <input
+                            type="number"
+                            name="order"
+                            value={heroForm.order}
+                            onChange={handleChange}
+                            min="1"
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter order number (1 = highest priority)"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            Items will be displayed in ascending order (smaller numbers first)
+                        </p>
+                        {!editingHero && (
+                            <div className="mt-2 space-y-1">
+                                <p className="text-xs text-blue-600">
+                                    💡 Available order positions: 
+                                    {(() => {
+                                        const existingOrders = allHero.map(h => parseInt(h.order) || 0).sort((a, b) => a - b);
+                                        const availableOrders = [];
+                                        for (let i = 1; i <= existingOrders.length + 1; i++) {
+                                            if (!existingOrders.includes(i)) {
+                                                availableOrders.push(i);
+                                            }
+                                        }
+                                        return availableOrders.join(', ');
+                                    })()}
+                                </p>
+                                <p className="text-xs text-green-600">
+                                    ✓ Suggested: {heroForm.order}
+                                </p>
+                            </div>
+                        )}
+                        {/* {editingHero && (
+                            <p className="text-xs text-amber-600 mt-1">
+                                ⚠️ Tip: Changing the order will automatically reorder other items
+                            </p>
+                        )} */}
+                    </div>
+                    
+                    {/* Title */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title *
+                        </label>
+                        <input
+                            type="text"
+                            name="title"
+                            value={heroForm.title}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter hero title"
+                        />
+                    </div>
+                    
+                    {/* Tag */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tag *
+                        </label>
+                        <input
+                            type="text"
+                            name="tag"
+                            value={heroForm.tag}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter tag (e.g., Welcome to our site)"
+                        />
+                    </div>
+                    
+                    {/* Description */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description *
+                        </label>
+                        <textarea
+                            name="description"
+                            value={heroForm.description}
+                            onChange={handleChange}
+                            required
+                            rows="4"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Enter description"
+                        />
+                    </div>
+                    
+                    {/* Image */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Image {!editingHero && "*"}
+                        </label>
+                        <input
+                            type="file"
+                            name="image"
+                            onChange={handleChange}
+                            accept="image/jpeg,image/png,image/jpg,image/webp"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            required={!editingHero}
+                        />
+                        {editingHero && editingHero.image && (
+                            <div className="mt-2">
+                                <p className="text-xs text-gray-500">Current image:</p>
+                                <img 
+                                    src={`${imgurl}/${editingHero.image}`} 
+                                    alt="Current"
+                                    className="mt-1 h-16 w-auto object-cover rounded"
+                                />
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Button Text */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Button Text
+                        </label>
+                        <input
+                            type="text"
+                            name="button_text"
+                            value={heroForm.button_text}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Get Started"
+                        />
+                    </div>
+                    
+                    {/* Button Link */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Button Link
+                        </label>
+                        <input
+                            type="text"
+                            name="button_link"
+                            value={heroForm.button_link}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="/contact"
+                        />
+                    </div>
+                    
+                    {/* Active Status */}
+                    <div className="flex items-center pt-2">
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            checked={heroForm.is_active}
+                            onChange={handleChange}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 block text-sm text-gray-700">
+                            Active (Show on Frontend)
+                        </label>
+                    </div>
+                    
+                    {/* Form Buttons */}
+                    <div className="flex gap-3 pt-6 border-t border-gray-200">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowForm(false);
+                                setEditingHero(null);
+                            }}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {submitting ? "Saving..." : editingHero ? "Update Hero" : "Create Hero"}
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            {/* Headline */}
-            <h1
-              ref={titleRef}
-              className="font-bold text-white leading-[1.2] md:leading-[1.2] tracking-tight whitespace-pre-line mt-4 mb-5 max-w-[700px]"
-              style={{ fontSize: 'clamp(36px, 5.5vw, 72px)' }}
-            >
-              {slide.title}
-            </h1>
-
-            {/* Description */}
-            <p
-              ref={descRef}
-              className="text-white/80 leading-relaxed max-w-[500px] mb-8 font-medium"
-              style={{ fontSize: 'clamp(15px, 1.2vw, 18px)' }}
-            >
-              {slide.desc}
-            </p>
-
-            {/* CTA row */}
-            <div ref={ctaRef}>
-              <DiscoverBtn href={slide.ctaLink} />
-            </div>
-
-            {/* Navigation Dots */}
-            <div className="flex gap-2 mt-8">
-              {SLIDES.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrent(idx)}
-                  className={`transition-all duration-300 rounded-full ${
-                    idx === current 
-                      ? 'w-8 h-1.5 bg-[#dc2626]' 
-                      : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm"
-            aria-label="Previous slide"
-          >
-            <svg viewBox="0 0 24 24" fill="none" width="28" height="28">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          
-          <button
-            onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm"
-            aria-label="Next slide"
-          >
-            <svg viewBox="0 0 24 24" fill="none" width="28" height="28">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
         </div>
+    );
+};
 
-        {/* Feature cards - styled to match product form aesthetics */}
-        <div
-          ref={cardsRef}
-          className="
-            relative z-30 mx-4 -mt-20 rounded-xl shadow-xl
-            md:absolute md:-bottom-32 md:left-[clamp(40px,7vw,120px)] md:right-[clamp(40px,7vw,120px)]
-            md:translate-y-1/2 md:mx-0 md:mt-0 md:max-w-4xl
-          "
-        >
-          <div className="grid grid-cols-3 bg-white rounded-xl overflow-hidden border border-gray-200 shadow-lg">
-            {FEATURES.map((f, i) => (
-              <div
-                key={i}
-                className={[
-                  'flex flex-col items-start gap-3 sm:gap-4 py-6 sm:py-6 px-5 sm:px-6 hover:bg-gray-50 transition-all duration-300 cursor-pointer group',
-                  i < FEATURES.length - 1
-                    ? 'border-b border-gray-100 sm:border-b-0 sm:border-r sm:border-gray-200'
-                    : '',
-                ].join(' ')}
-              >
-                <div className="flex-shrink-0 sm:hidden group-hover:scale-110 transition-transform duration-300">
-                  {f.iconSmall}
-                </div>
-                <div className="hidden sm:block group-hover:scale-110 transition-transform duration-300">
-                  {f.icon}
-                </div>
-
-                <div className="font-semibold text-sm sm:text-base text-gray-900 leading-snug group-hover:text-[#dc2626] transition-colors duration-300">
-                  {f.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
+export default AddHero;

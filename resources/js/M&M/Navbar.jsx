@@ -307,7 +307,7 @@ const NAV_LINKS = [
   { label: 'Services',           path: '/service' },
   { label: 'Projects', path: '/projects-page' },
   { label: 'Contact Us',         path: '/contact' },
-  { label: 'Add To Cart',         path: '/add-to-cart', isIcon: true, iconSrc: '/images/cart.png' },
+  // { label: 'Add To Cart',         path: '/add-to-cart', isIcon: true, iconSrc: '/images/cart.png' },
 ]
 
 const ChevronDown = ({ open }) => (

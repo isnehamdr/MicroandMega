@@ -1,278 +1,228 @@
-// resources/js/AdminDashboard/HeroSection.jsx
+// HeroSection.jsx
+import AddHero from '@/AddForm/AddHero';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Adminwrapper from '@/AdminDashboard/AdminWrapper';
 
-import AdminWrapper from '@/AdminDashboard/AdminWrapper'
-import React, { useState } from 'react'
-import { router, usePage } from '@inertiajs/react'
-import { Plus, Edit, Trash2, X } from 'lucide-react'
+const imgurl = import.meta.env.VITE_IMAGE_PATH;
 
-export default function HeroSection() {
-  const { heroItems, flash } = usePage().props
-  const [showModal, setShowModal] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    tag: '',
-    description: '',
-    button_text: 'Get Started',
-    button_link: '/contact',
-    is_active: true
-  })
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState('')
+const HeroSection = () => {
+    const [allHero, setAllHero] = useState([]);
+    const [reloadTrigger, setReloadTrigger] = useState(false);
+    const [editingHero, setEditingHero] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const data = new FormData()
-    
-    Object.keys(formData).forEach(key => {
-      data.append(key, formData[key])
-    })
-    
-    if (imageFile) {
-      data.append('image', imageFile)
-    }
-    
-    if (editingItem) {
-      data.append('_method', 'PUT')
-      router.post(`/admin/hero/${editingItem.id}`, data, {
-        onSuccess: () => {
-          setShowModal(false)
-          resetForm()
+    // For fetching the Hero data
+    useEffect(() => {
+        const fetchHero = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(route("ourhero.index"));
+                
+                // Handle different response structures
+                let heroData = [];
+                if (Array.isArray(response.data)) {
+                    heroData = response.data;
+                } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+                    heroData = response.data.data;
+                } else if (response.data && response.data.heroItems && Array.isArray(response.data.heroItems)) {
+                    heroData = response.data.heroItems;
+                } else if (response.data && typeof response.data === 'object') {
+                    heroData = [response.data];
+                }
+                
+                // Sort by order field
+                heroData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setAllHero(heroData);
+            } catch (error) {
+                console.error("Fetching error: ", error);
+                setAllHero([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchHero();
+    }, [reloadTrigger]);
+
+    // For delete the Hero
+    const handleDelete = async (id) => {
+        if (!confirm("Are you sure you want to delete this hero section?")) return;
+        
+        try {
+            await axios.delete(route("ourhero.destroy", { heroSection: id }));
+            setReloadTrigger((prev) => !prev);
+            alert("Hero section deleted successfully!");
+        } catch (error) {
+            console.log("Delete error: ", error);
+            alert("Error deleting hero section");
         }
-      })
-    } else {
-      router.post('/admin/hero', data, {
-        onSuccess: () => {
-          setShowModal(false)
-          resetForm()
+    };
+
+    // Handle edit
+    const handleEdit = (hero) => {
+        setEditingHero(hero);
+        setShowForm(true);
+    };
+
+    // Handle update after edit
+    const handleUpdate = async (formData, id) => {
+        try {
+            formData.append("_method", "PUT");
+            const response = await axios.post(
+                route("ourhero.update", { heroSection: id }),
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                },
+            );
+            setReloadTrigger((prev) => !prev);
+            return response.data;
+        } catch (error) {
+            console.log("Error updating Hero: ", error);
+            throw error;
         }
-      })
+    };
+    
+    // Show loading state
+    if (loading) {
+        return (
+            <Adminwrapper>
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-gray-500">Loading heroes...</div>
+                </div>
+            </Adminwrapper>
+        );
     }
-  }
-
-  const deleteItem = (item) => {
-    if (confirm('Delete this hero item?')) {
-      router.delete(`/admin/hero/${item.id}`)
-    }
-  }
-
-  const resetForm = () => {
-    setEditingItem(null)
-    setFormData({
-      title: '',
-      tag: '',
-      description: '',
-      button_text: 'Get Started',
-      button_link: '/contact',
-      is_active: true
-    })
-    setImageFile(null)
-    setImagePreview('')
-  }
-
-  const editItem = (item) => {
-    setEditingItem(item)
-    setFormData({
-      title: item.title,
-      tag: item.tag,
-      description: item.description,
-      button_text: item.button_text,
-      button_link: item.button_link,
-      is_active: item.is_active
-    })
-    setImagePreview(`/storage/${item.image}`)
-    setShowModal(true)
-  }
-
-  return (
-    <AdminWrapper>
-      <div className="p-6">
-        {flash?.success && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-            {flash.success}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Hero Section Manager</h1>
-          <button
-            onClick={() => {
-              resetForm()
-              setShowModal(true)
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            <Plus size={20} /> Add New Hero Item
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {heroItems?.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden border">
-              <img 
-                src={`/storage/${item.image}`} 
-                alt={item.title}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg">{item.title}</h3>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => editItem(item)}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => deleteItem(item)}
-                      className="p-1 hover:bg-red-100 rounded text-red-600"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-2">{item.tag}</p>
-                <p className="text-gray-700 text-sm line-clamp-2">{item.description}</p>
-                <div className="mt-3 flex justify-between items-center text-xs">
-                  <span className="text-gray-500">Order: {item.order}</span>
-                  <span className={item.is_active ? 'text-green-600' : 'text-gray-400'}>
-                    {item.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {heroItems?.length === 0 && (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No hero items yet. Click "Add New Hero Item" to create one.</p>
-          </div>
-        )}
-
-        {/* Modal Form */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-                <h2 className="text-xl font-bold">{editingItem ? 'Edit Hero Item' : 'Add Hero Item'}</h2>
-                <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded">
-                  <X size={24} />
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter main heading"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tag/Badge *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.tag}
-                    onChange={(e) => setFormData({...formData, tag: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-                    placeholder="e.g., Premium Security Solutions"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description *</label>
-                  <textarea
-                    required
-                    rows="4"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter detailed description"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Background Image *</label>
-                  {imagePreview && (
-                    <div className="mb-2">
-                      <img src={imagePreview} alt="Preview" className="h-32 rounded object-cover" />
+    
+    return (
+        <Adminwrapper>
+            <div className="p-6">
+                <div className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
+                            Hero Management
+                        </h1>
+                        <p className="text-gray-500 mt-1">Total: {allHero.length} items</p>
+                        <p className="text-sm text-gray-400 mt-1">Order can be set manually in the form</p>
                     </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0]
-                      if (file) {
-                        setImageFile(file)
-                        setImagePreview(URL.createObjectURL(file))
-                      }
-                    }}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Recommended size: 1920x1080px</p>
+                    <button
+                        onClick={() => {
+                            setEditingHero(null);
+                            setShowForm(true);
+                        }}
+                        className="px-4 py-2 flex items-center gap-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                    >
+                        <Plus size={18} />
+                        <span>Create New Hero</span>
+                    </button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Button Text</label>
-                  <input
-                    type="text"
-                    value={formData.button_text}
-                    onChange={(e) => setFormData({...formData, button_text: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    placeholder="Get Started"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Button Link</label>
-                  <input
-                    type="text"
-                    value={formData.button_link}
-                    onChange={(e) => setFormData({...formData, button_link: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg"
-                    placeholder="/contact"
-                  />
-                </div>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                    className="rounded text-red-600"
-                  />
-                  <span>Active (show on website)</span>
-                </label>
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    {editingItem ? 'Update' : 'Create'}
-                  </button>
-                </div>
-              </form>
+                
+                {/* Display Hero Items as Table List */}
+                {allHero.length === 0 ? (
+                    <div className="bg-white rounded-lg shadow p-8 text-center">
+                        <p className="text-gray-500">No hero sections found. Click "Create New Hero" to add one.</p>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg shadow overflow-hidden">
+                        {/* Table Header */}
+                        <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-600">
+                            <div className="col-span-1">Order</div>
+                            <div className="col-span-4">Hero Details</div>
+                            <div className="col-span-3">Tag</div>
+                            <div className="col-span-2">Status</div>
+                            <div className="col-span-2 text-right">Actions</div>
+                        </div>
+                        
+                        {/* Table Rows */}
+                        <div className="divide-y divide-gray-200">
+                            {allHero.map((hero, index) => (
+                                <div key={hero.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition">
+                                    {/* Order Number */}
+                                    <div className="col-span-1">
+                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+                                            {hero.order || index + 1}
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Hero Details */}
+                                    <div className="col-span-4">
+                                        <div className="flex items-center gap-3">
+                                            {hero.image && (
+                                                <img 
+                                                    src={`${imgurl}/${hero.image}`} 
+                                                    alt={hero.title}
+                                                    className="w-12 h-12 object-cover rounded"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = 'https://via.placeholder.com/50x50?text=No+Image';
+                                                    }}
+                                                />
+                                            )}
+                                            <div>
+                                                <h3 className="font-medium text-gray-900">{hero.title}</h3>
+                                                <p className="text-xs text-gray-500 line-clamp-1">{hero.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Tag */}
+                                    <div className="col-span-3">
+                                        <span className="text-sm text-gray-600">{hero.tag}</span>
+                                    </div>
+                                    
+                                    {/* Status */}
+                                    <div className="col-span-2">
+                                        <span className={`px-2 py-1 text-xs rounded-full ${
+                                            hero.is_active 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            {hero.is_active ? "Active" : "Inactive"}
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Actions */}
+                                    <div className="col-span-2 flex items-center justify-end gap-2">
+                                        <button
+                                            onClick={() => handleEdit(hero)}
+                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                            title="Edit"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(hero.id)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {/* Pass allHero to AddHero component */}
+                <AddHero
+                    showForm={showForm}
+                    setShowForm={setShowForm}
+                    setReloadTrigger={setReloadTrigger}
+                    editingHero={editingHero}
+                    setEditingHero={setEditingHero}
+                    handleUpdate={handleUpdate}
+                    allHero={allHero}
+                />
             </div>
-          </div>
-        )}
-      </div>
-    </AdminWrapper>
-  )
-}
+        </Adminwrapper>
+    );
+};
+
+HeroSection.layout = (page) => page;
+export default HeroSection;

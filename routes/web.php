@@ -1,23 +1,22 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\HeroSectionController;
+use App\Http\Controllers\LogController;
+use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ServiceTicketController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\LogController;
-use App\Http\Controllers\HeroSectionController;
-use App\Http\Controllers\ProductCategoryController;
-use App\Http\Controllers\ServiceTicketController;
-use Illuminate\Support\Facades\Response;
-use Spatie\Sitemap\Sitemap;
-use Spatie\Sitemap\Tags\Url;
 use App\Models\Product;
 use App\Models\Project;
-
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -37,55 +36,45 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
-   
-        Route::get('/category', function () {
-    return Inertia::render('AdminPages/Category');
-});
+    Route::get('/category', function () {
+        return Inertia::render('AdminPages/Category');
+    });
 
     Route::get('/products', function () {
-    return Inertia::render('AdminPages/Products');
-});
+        return Inertia::render('AdminPages/Products');
+    });
     Route::get('/projects', function () {
-    return Inertia::render('AdminPages/Projects');
-});
+        return Inertia::render('AdminPages/Projects');
+    });
     Route::get('/testimonials', function () {
-    return Inertia::render('AdminPages/Testimonials');
-});
+        return Inertia::render('AdminPages/Testimonials');
+    });
 
     Route::get('/service-tickets', function () {
-    return Inertia::render('AdminPages/ServiceTicket');
-});
+        return Inertia::render('AdminPages/ServiceTicket');
+    });
 
-  Route::get('/hero-section', function () {
-    return Inertia::render('AdminPages/HeroSection');
-});
+    Route::get('/hero-section', function () {
+        return Inertia::render('AdminPages/HeroSection');
+    });
 
-
-   Route::get('/hero-section', [HeroSectionController::class, 'index'])->name('admin.hero');
-    Route::post('/hero', [HeroSectionController::class, 'store'])->name('admin.hero.store');
-    Route::put('/hero/{heroSection}', [HeroSectionController::class, 'update'])->name('admin.hero.update');
-    Route::delete('/hero/{heroSection}', [HeroSectionController::class, 'destroy'])->name('admin.hero.destroy');
-    Route::post('/hero/reorder', [HeroSectionController::class, 'reorder'])->name('admin.hero.reorder');
-
-
-
+    Route::post('/ourhero', [HeroSectionController::class, 'store'])->name('ourhero.store');
+    Route::put('/ourhero/{heroSection}', [HeroSectionController::class, 'update'])->name('ourhero.update');
+    Route::delete('/ourhero/{heroSection}', [HeroSectionController::class, 'destroy'])->name('ourhero.destroy');
+    Route::post('/ourhero/reorder', [HeroSectionController::class, 'reorder'])->name('ourhero.reorder');
 
     Route::post('/ourprojects', [ProjectController::class, 'store'])->name('ourprojects.store');
     Route::put('/ourprojects/{id}', [ProjectController::class, 'update'])->name('ourprojects.update');
     Route::delete('/ourprojects/{id}', [ProjectController::class, 'destroy'])->name('ourprojects.destroy');
-  
-  
+
     // ── Products ──────────────────────────────────────────────────────────
 
-   Route::post('/ourproducts', [ProductController::class, 'store'])
+    Route::post('/ourproducts', [ProductController::class, 'store'])
         ->name('ourproducts.store');
     Route::put('/ourproducts/{id}', [ProductController::class, 'update'])
         ->name('ourproducts.update');
     Route::delete('/ourproducts/{id}', [ProductController::class, 'destroy'])
         ->name('ourproducts.destroy');
-
-        
 
     // Product Categories (Admin)
     Route::prefix('ourproductcategories')->group(function () {
@@ -95,45 +84,42 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}/images/{imageId}', [ProductCategoryController::class, 'destroyImage'])
             ->name('ourproductcategories.images.destroy');
     });
-    
 
-     Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');       
-    Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');      
-    Route::put('/ourproductcategories/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update'); 
-    Route::delete('/ourproductcategories/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy'); 
-  
+    Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
+    Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
+    Route::put('/ourproductcategories/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
+    Route::delete('/ourproductcategories/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
 
-     // ── Testimonials ──────────────────────────────────────────────────────
-    Route::post('/ourtestimonials',                [TestimonialController::class, 'store'])  ->name('ourtestimonials.store');
-    Route::put('/ourtestimonials/{id}',   [TestimonialController::class, 'update']) ->name('ourtestimonials.update');
-    Route::delete('/ourtestimonials/{id}',[TestimonialController::class, 'destroy'])->name('ourtestimonials.destroy');
+    // ── Testimonials ──────────────────────────────────────────────────────
+    Route::post('/ourtestimonials', [TestimonialController::class, 'store'])->name('ourtestimonials.store');
+    Route::put('/ourtestimonials/{id}', [TestimonialController::class, 'update'])->name('ourtestimonials.update');
+    Route::delete('/ourtestimonials/{id}', [TestimonialController::class, 'destroy'])->name('ourtestimonials.destroy');
 
-     // ── Users ──────────────────────────────────────────────────────
+    // ── Users ──────────────────────────────────────────────────────
 
-        Route::get('/user',function(){
+    Route::get('/user', function () {
         return Inertia::render('AdminPages/UserManagement');
     });
-    Route::get('/ourusers', [UserController::class, 'index'])->name('ourusers.index');       
-    Route::post('/ourusers', [UserController::class, 'store'])->name('ourusers.store');      
-    Route::put('/ourusers/{id}', [UserController::class, 'update'])->name('ourusers.update'); 
-    Route::delete('/ourusers/{id}', [UserController::class, 'destroy'])->name('ourusers.destroy'); 
-    
+    Route::get('/ourusers', [UserController::class, 'index'])->name('ourusers.index');
+    Route::post('/ourusers', [UserController::class, 'store'])->name('ourusers.store');
+    Route::put('/ourusers/{id}', [UserController::class, 'update'])->name('ourusers.update');
+    Route::delete('/ourusers/{id}', [UserController::class, 'destroy'])->name('ourusers.destroy');
 
-     // ── Activity Log──────────────────────────────────────────────────────
-        Route::get('/log',function(){
+    // ── Activity Log──────────────────────────────────────────────────────
+    Route::get('/log', function () {
         return Inertia::render('AdminPages/ActivityLog');
     });
-    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');  
+    Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
     // Service Tickets (Admin)
-    
-    Route::get('/ourservicetickets', [ServiceTicketController::class, 'index'])->name('ourservicetickets.index');
-Route::put('/ourservicetickets/{id}', [ServiceTicketController::class, 'update'])->name('ourservicetickets.update');   // ← ADD THIS
 
-   
+    Route::get('/ourservicetickets', [ServiceTicketController::class, 'index'])->name('ourservicetickets.index');
+    Route::put('/ourservicetickets/{id}', [ServiceTicketController::class, 'update'])->name('ourservicetickets.update');   // ← ADD THIS
+
 });
 
 
+    Route::get('/ourhero', [HeroSectionController::class, 'index'])->name('ourhero.index');
 
 
 // Public Project Routes (API)
@@ -165,30 +151,22 @@ Route::prefix('ourproductcategories')->group(function () {
 // })->name('products.show');
 
 Route::get('/category/{categorySlug}', [ProductCategoryController::class, 'showPage'])->name('products.category');
-Route::get('/products/{slug}',         [ProductController::class, 'showPage'])->name('products.show');
-
-
-
+Route::get('/products/{slug}', [ProductController::class, 'showPage'])->name('products.show');
 
 // Public Testimonials Routes (API)
 Route::get('/ourtestimonials', [TestimonialController::class, 'index'])->name('ourtestimonials.index');
 
 // Product Detail Pages (public)
 
+Route::get('/about', function () {
+    return Inertia::render('About');
+});
 
-    Route::get('/about',function(){
-        return Inertia::render('About');
-    });
+Route::get('/service', function () {
+    return Inertia::render('Service');
+});
 
- 
-
-
-     Route::get('/service',function(){
-        return Inertia::render('Service');
-    });
-
-
-   Route::get('/projects-page', function () {
+Route::get('/projects-page', function () {
     return Inertia::render('ProjectsPage');
 })->name('projects.page');
 
@@ -200,35 +178,24 @@ Route::get('/ourtestimonials', [TestimonialController::class, 'index'])->name('o
 Route::get('/project-details/{slug}', [ProjectController::class, 'showPage'])->name('project.details');
 
 
+Route::get('/contact', function () {
+    return Inertia::render('ContactUs');
+});
 
+    Route::get('/product-details', function () {
+    return Inertia::render('ProductDetailPage');
+});
 
-      Route::get('/contact',function(){
-        return Inertia::render('ContactUs');
-    });
-
-    
-      Route::get('/product-details',function(){
-        return Inertia::render('ProductDetailPage');
-    });
-
-
-      Route::get('/service-ticket',function(){
-        return Inertia::render('ServiceTicket');
-    });
-
+Route::get('/service-ticket', function () {
+    return Inertia::render('ServiceTicket');
+});
 
 // Service Ticket submission (public)
 Route::post('/service-tickets', [ServiceTicketController::class, 'store'])->name('service-tickets.store');
 
-
-   Route::get('/add-to-cart',function(){
-        return Inertia::render('AddToCart');
-    });
-
-
-
-
-
+Route::get('/add-to-cart', function () {
+    return Inertia::render('AddToCart');
+});
 
 // robots.txt
 Route::get('/robots.txt', function () {
@@ -239,9 +206,9 @@ Route::get('/robots.txt', function () {
             ->header('Content-Type', 'text/plain');
     }
 
-$content = "User-agent: *\n";
-$content .= "Allow: /\n\n";
-$content .= "Sitemap: " . url('/sitemap.xml') . "\n";
+    $content = "User-agent: *\n";
+    $content .= "Allow: /\n\n";
+    $content .= 'Sitemap: '.url('/sitemap.xml')."\n";
 
     $content .= "Disallow: /admin\n";
     $content .= "Disallow: /login\n";
@@ -249,12 +216,11 @@ $content .= "Sitemap: " . url('/sitemap.xml') . "\n";
     $content .= "Disallow: /storage\n";
     $content .= "Disallow: /vendor\n\n";
 
-    $content .= "Sitemap: " . url('/sitemap.xml') . "\n";
+    $content .= 'Sitemap: '.url('/sitemap.xml')."\n";
 
     return response($content, 200)
         ->header('Content-Type', 'text/plain');
 });
-
 
 // llms.txt
 Route::get('/llms.txt', function () {
@@ -263,10 +229,9 @@ Route::get('/llms.txt', function () {
 
     $content .= "User-agent: *\n";
     $content .= "Allow: /\n\n";
-    
 
     $content .= "Site-Name: Micro & Mega\n";
-    $content .= "Site-URL: " . url('/') . "\n";
+    $content .= 'Site-URL: '.url('/')."\n";
     $content .= "Description: Micro & Mega provides advanced security systems, industrial products, and technical services.\n\n";
 
     $content .= "Focus: Security Systems, Industrial Products, Services, Projects\n\n";
@@ -280,13 +245,12 @@ Route::get('/llms.txt', function () {
     $content .= "- Admin pages\n";
     $content .= "- Login areas\n\n";
 
-    $content .= "Contact: " . url('/contact') . "\n";
-    $content .= "Sitemap: " . url('/sitemap.xml') . "\n";
+    $content .= 'Contact: '.url('/contact')."\n";
+    $content .= 'Sitemap: '.url('/sitemap.xml')."\n";
 
     return response($content, 200)
         ->header('Content-Type', 'text/plain');
 });
-
 
 // Sitemap route
 Route::get('/sitemap.xml', function () {
@@ -327,8 +291,5 @@ Route::get('/sitemap.xml', function () {
     return response($sitemap->render(), 200)
         ->header('Content-Type', 'application/xml');
 })->name('sitemap');
-
-
-
 
 require __DIR__.'/auth.php';

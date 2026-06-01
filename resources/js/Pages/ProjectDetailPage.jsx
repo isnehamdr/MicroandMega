@@ -487,10 +487,8 @@
 
 import {useEffect, useState} from "react";
 import {usePage, Link, Head} from "@inertiajs/react";
-import axios from "axios";
 import {
 	MapPin,
-	Trophy,
 	Calendar,
 	Building2,
 	ArrowLeft,
@@ -584,7 +582,7 @@ function ScrollToTopButton() {
 
 function orderByOldestFirst(list) {
 	if (!Array.isArray(list)) 
-		return list;
+		return [];
 	
 	return [... list].sort((a, b) => {
 		const aKey = a ?. created_at ?? a ?. createdAt ?? a ?. id;
@@ -601,8 +599,13 @@ function orderByOldestFirst(list) {
 	});
 }
 
+function asArray(value) {
+	return Array.isArray(value) ? value : [];
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({project}) {
+	const epcItems = asArray(project ?. epc ?. items);
 	const details = [
 		{
 			icon: Building2,
@@ -668,14 +671,14 @@ function Sidebar({project}) {
 
 		{/* EPC Scope */}
 		{
-		project ?. epc ?. items ?. length > 0 && (<div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+		epcItems.length > 0 && (<div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 			<div className="bg-gradient-to-r from-gray-900 via-gray-900 to-gray-800 px-5 py-3.5 flex items-center gap-2">
 				<Zap size={14}
 					className="text-red-400"/>
 				<h3 className="text-xs font-black text-white uppercase tracking-widest">EPC Scope</h3>
 			</div>
 			<ul className="p-5 flex flex-col gap-2"> {
-				project.epc.items.map((item) => (<li key={item}
+				epcItems.map((item) => (<li key={item}
 					className="flex items-start gap-2 text-sm text-gray-700">
 					<ChevronRight size={13}
 						className="text-red-400 flex-shrink-0 mt-0.5"/> {item} </li>))
@@ -755,63 +758,54 @@ function ErrorState({message}) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function ProjectDetailPage() {
-	const {project: initialProject, error: pageError, slug} = usePage().props;
-	const [project, setProject] = useState(initialProject || null);
-	const [loading, setLoading] = useState(!initialProject && !pageError);
-	const [error, setError] = useState(pageError || null);
-
-	useEffect(() => {
-		if (!initialProject && !pageError && slug) {
-			setLoading(true);
-			axios.get(`/ourprojects/${slug}`).then(res => setProject(res.data)).catch(() => setError("Project not found")). finally(() => setLoading(false));
-		}
-	}, [slug, initialProject, pageError]);
+	const pageProps = usePage().props || {};
+	const project = pageProps.project && typeof pageProps.project === "object" ? pageProps.project : null;
+	const error = pageProps.error || null;
+	const seo = pageProps.seo && typeof pageProps.seo === "object" ? pageProps.seo : {};
 
 	// Scroll to top once project data is ready
 	useEffect(() => {
-		if (project && !loading) {
+		if (project) {
 			requestAnimationFrame(() => {
 				window.scrollTo({top: 0, behavior: "smooth"});
 			});
 		}
-	}, [project, loading]);
-
-	if (loading) 
-		return <LoadingState/>;
+	}, [project]);
 	
 	if (error || !project) 
 		return <ErrorState message={error}/>;
 	
 
 	const orderedProducts = orderByOldestFirst(project.products);
+	const highlights = asArray(project.highlights);
+	const tags = asArray(project.tags);
 
 	// ── SEO values (all derived from project data, no undefined `seo` reference) ──
-	const seoTitle = project.title ? `${
+	const seoTitle = seo.title || (project.title ? `${
 		project.title
 	} | Micro & Mega` : project.name ? `${
 		project.name
-	} | Micro & Mega` : "Project | Micro & Mega";
+	} | Micro & Mega` : "Project | Micro & Mega");
 
-	const seoDescription = project.description ? project.description.slice(0, 155) : "View project details by Micro & Mega Nepal.";
+	const seoDescription = seo.description || (project.description ? project.description.slice(0, 155) : "View project details by Micro & Mega Nepal.");
 
-	const seoImage = project.image ? `${imgurl}/${
+	const seoImage = seo.image || (project.image ? `${imgurl}/${
 		project.image
-	}` : "/images/og-image.jpg";
+	}` : "/images/og-image.jpg");
 
-	// SSR-safe canonical URL
-	const seoUrl = typeof window !== "undefined" ? window.location.href : "";
+	const seoUrl = seo.url || (typeof window !== "undefined" ? window.location.href : "");
 
 	return (<>
 		<Head>
-			<title> {seoTitle}</title>
+			{/* <title> {seoTitle}</title> */}
 			<meta name="description"
 				content={seoDescription}/>
-			<meta name="robots" content="index, follow"/> {
+			{/* <meta name="robots" content="index, follow"/> {
 			seoUrl && <link rel="canonical"
 				href={seoUrl}/>
-		}
+		} */}
 
-			{/* Open Graph */}
+			
 			<meta property="og:type" content="website"/>
 			<meta property="og:url"
 				content={seoUrl}/>
@@ -820,7 +814,7 @@ export default function ProjectDetailPage() {
 			<meta property="og:description"
 				content={seoDescription}/>
 			<meta property="og:image"
-				content={seoImage}/> {/* Twitter Card */}
+				content={seoImage}/> 
 			<meta name="twitter:card" content="summary_large_image"/>
 			<meta name="twitter:url"
 				content={seoUrl}/>
@@ -959,7 +953,7 @@ export default function ProjectDetailPage() {
 
 						{/* Technical Overview (dark card) */}
 						{
-						(project.overviewDescription || project.highlights ?. length > 0) && (<div className="rounded-2xl overflow-hidden shadow-sm"
+						(project.overviewDescription || highlights.length > 0) && (<div className="rounded-2xl overflow-hidden shadow-sm"
 							style={
 								{background: "linear-gradient(135deg, #111827 0%, #1f2937 100%)"}
 						}>
@@ -974,8 +968,8 @@ export default function ProjectDetailPage() {
 								}</p>)
 							}
 								{
-								project.highlights ?. length > 0 && (<ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5"> {
-									project.highlights.map((h) => (<CheckItem key={h}
+								highlights.length > 0 && (<ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5"> {
+									highlights.map((h) => (<CheckItem key={h}
 										text={h}
 										dark/>))
 								} </ul>)
@@ -1057,14 +1051,14 @@ export default function ProjectDetailPage() {
 
 						{/* Tags */}
 						{
-						project.tags ?. length > 0 && (<div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+						tags.length > 0 && (<div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
 							<div className="flex items-center gap-2 mb-3">
 								<Tag size={13}
 									className="text-gray-400"/>
 								<p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Project Tags</p>
 							</div>
 							<div className="flex flex-wrap gap-2"> {
-								project.tags.map((tag) => (<span key={tag}
+								tags.map((tag) => (<span key={tag}
 									className="text-xs font-bold text-red-700 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full hover:bg-red-100 transition-colors cursor-default"> {tag} </span>))
 							} </div>
 						</div>)
