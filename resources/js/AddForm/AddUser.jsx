@@ -27,8 +27,8 @@ const AddUsers = ({ editingUser, setEditingUser, setShowForm, setReloadTrigger, 
                 image: null,
             });
             // Set image preview if editing user has an image
-            if (editingUser.image_url) {
-                setImagePreview(editingUser.image_url);
+            if (editingUser.image) {
+                setImagePreview(editingUser.image);
             } else {
                 setImagePreview(null);
             }
@@ -214,7 +214,7 @@ const AddUsers = ({ editingUser, setEditingUser, setShowForm, setReloadTrigger, 
                             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
                                 {imagePreview ? (
                                     <img
-                                        src={imagePreview}
+                                        src={`${imgurl}/${imagePreview}`}
                                         alt="Profile"
                                         className="w-full h-full object-cover"
                                     />

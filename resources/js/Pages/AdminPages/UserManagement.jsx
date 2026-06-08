@@ -28,6 +28,9 @@ const UserManagement = () => {
         fetchUsers();
     }, [reloadTrigger]);
 
+
+    console.log(allUsers);
+
     // Delete user
     const handleDelete = async (id) => {
         if (
@@ -154,7 +157,7 @@ const UserManagement = () => {
                                 <div className="flex flex-col items-center text-center mb-5">
                                     {/* Avatar */}
                                     <div className="relative mb-3">
-                                        {user.image_url ? (
+                                        {user.image ? (
                                             <img 
                                                src={`${imgurl}/${user.image}`}
                                             // src={user.image} 

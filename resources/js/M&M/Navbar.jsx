@@ -10,7 +10,7 @@
 
 // const PRODUCTS_MENU = [
 //   {name:'Fire Alarm', slug:'fire-detection-notification-and-suppression'},
-//   {name:'Public Address', slug:'public-addressal-systems'},
+//   {name:'Public Address', slug:'public-audio-system'},
 //   {name:'Access Control', slug:'modern-access-control-systems',},
 //   {name:'CCTV', slug:'integrated-security-systems'},
 //  {name:'Digital Lighting', slug: 'digital-lighting'},
@@ -288,7 +288,7 @@ const slugify = (value) =>
 
 const PRODUCTS_MENU = [
   {name:'Fire Alarm', slug:'fire-detection-notification-and-suppression'},
-  {name:'Public Address', slug:'public-addressal-systems'},
+  {name:'Public Address', slug:'public-audio-system'},
   {name:'Access Control', slug:'modern-access-control-systems',},
   {name:'CCTV', slug:'integrated-security-systems'},
  {name:'Digital Lighting', slug: 'digital-lighting'},
