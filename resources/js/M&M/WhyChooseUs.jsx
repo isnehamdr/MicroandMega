@@ -563,7 +563,7 @@ export default function WhyChooseUs() {
             {/* Center image */}
             <img
               ref={imageRef}
-              src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=700&q=80"
+              src="/images/choseus.jpg"
               alt="CCTV Security Cameras"
               className="w-[60%] max-w-xs object-contain drop-shadow-xl"
             />

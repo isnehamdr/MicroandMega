@@ -1,6 +1,6 @@
 import Mission from '@/M&M/Mission'
 import SecurityAbout from '@/M&M/Securityabout'
-import Team from '@/M&M/Team'
+// import Team from '@/M&M/Team'
 import Wwhatwedo from '@/M&M/Whatwedo'
 import WhyChooseUs from '@/M&M/WhyChooseUs'
 import {Link} from '@inertiajs/react'
@@ -49,7 +49,7 @@ const About = () => {
 			<Mission/>
 			<WhyChooseUs/>
 			<Wwhatwedo/>
-			<Team/>
+			{/* <Team/> */}
 
 
 		</>
