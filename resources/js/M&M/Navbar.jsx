@@ -287,7 +287,7 @@ const slugify = (value) =>
     .replace(/^-+|-+$/g, '')
 
 const PRODUCTS_MENU = [
-  {name:'Fire Alarm', slug:'fire-detection-notification-and-suppression'},
+  {name:'Automation Fire Alarm', slug:'fire-detection-notification-and-suppression'},
   {name:'Public Address', slug:'public-audio-system'},
   {name:'Access Control', slug:'modern-access-control-systems',},
   {name:'CCTV', slug:'integrated-security-systems'},
