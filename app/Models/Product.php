@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -51,13 +51,13 @@ class Product extends Model
         $slug = $base;
         $counter = 2;
 
-        while (self::withTrashed()
-            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
-            ->where('slug', $slug)
-            ->exists()
-        ) {
-            $slug = $base . '-' . $counter++;
-        }
+       while (self::query()
+    ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+    ->where('slug', $slug)
+    ->exists()
+) {
+    $slug = $base . '-' . $counter++;
+}
 
         return $slug;
     }

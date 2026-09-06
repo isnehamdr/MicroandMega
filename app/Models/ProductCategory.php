@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class ProductCategory extends Model
 {
-    use HasFactory, SoftDeletes;
+      use HasFactory;
 
     protected $fillable = [
         'name',
@@ -20,6 +19,7 @@ class ProductCategory extends Model
         'featured_image',
         'icon_image',
         'parent_id',
+        'order',
         'status',
     ];
 
@@ -80,9 +80,5 @@ class ProductCategory extends Model
         return $this->hasMany(ProductCategory::class, 'parent_id');
     }
 
-    // A category has many gallery images
-    // public function images()
-    // {
-    //     return $this->hasMany(ProductCategoryImage::class, 'product_category_id');
-    // }
+   
 }

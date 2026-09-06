@@ -86,9 +86,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
-    Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
-    Route::put('/ourproductcategories/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
-    Route::delete('/ourproductcategories/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
+    // Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
+    // Route::put('/ourproductcategories/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
+    // Route::delete('/ourproductcategories/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
 
     // ── Testimonials ──────────────────────────────────────────────────────
     Route::post('/ourtestimonials', [TestimonialController::class, 'store'])->name('ourtestimonials.store');
@@ -140,7 +140,14 @@ Route::prefix('ourproductcategories')->group(function () {
     Route::get('/', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
     Route::get('/flat', [ProductCategoryController::class, 'flat'])->name('ourproductcategories.flat');
     Route::get('/{slug}', [ProductCategoryController::class, 'show'])->name('ourproductcategories.show');
+    // Route::post('/ourproductcategories/reorder', [ProductCategoryController::class, 'reorder'])->name('ourproductcategories.reorder');
+
+ 
 });
+
+Route::resource('ourproductcategories', ProductCategoryController::class);
+Route::post('/ourproductcategories/reorder', [ProductCategoryController::class, 'reorder']);
+//    Route::post('ourproductcategories/reorder', [ProductCategoryController::class, 'reorder']);
 
 // Route::get('/category/{categorySlug}', function ($categorySlug) {
 //     return Inertia::render('ProductDetailPage', ['categorySlug' => $categorySlug]);

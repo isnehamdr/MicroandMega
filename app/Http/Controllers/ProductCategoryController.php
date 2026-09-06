@@ -9,12 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log as LaravelLog;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+
 class ProductCategoryController extends Controller
 {
     // GET /ourproductcategories — all categories (nested tree)
 
-
-     public function showPage($slug)
+    public function showPage($slug)
     {
         try {
             $category = ProductCategory::where('slug', $slug)
@@ -37,14 +37,19 @@ class ProductCategoryController extends Controller
             abort(404);
         }
     }
+
     public function index()
     {
         try {
-            $categories = ProductCategory::with(['children'])
-                ->whereNull('parent_id')
-                ->where('status', true)
-                ->latest()
-                ->get();
+            $categories = ProductCategory::with([
+                'children' => function ($query) {
+                    $query->orderBy('order', 'asc');
+                }
+            ])
+            ->whereNull('parent_id')
+            ->where('status', true)
+            ->orderBy('order', 'asc')
+            ->get();
 
             return response()->json([
                 'status'  => true,
@@ -62,18 +67,20 @@ class ProductCategoryController extends Controller
     {
         try {
             $categories = ProductCategory::with('parent')
-                ->orderBy('name')
+                ->orderBy('order', 'asc')
+                ->orderBy('name', 'asc')
                 ->get()
                 ->map(fn($c) => [
-                    'id'          => $c->id,
-                    'name'        => $c->name,
-                    'slug'        => $c->slug,
-                    'parent_id'   => $c->parent_id,
-                    'parent_name' => $c->parent?->name,
-                    'icon_image'  => $c->icon_image,
-                    'featured_image' => $c->featured_image,
-                    'gallery_images' => $c->gallery_images ?? [],
-                    'status'      => $c->status,
+                    'id'              => $c->id,
+                    'name'            => $c->name,
+                    'slug'            => $c->slug,
+                    'parent_id'       => $c->parent_id,
+                    'parent_name'     => $c->parent?->name,
+                    'icon_image'      => $c->icon_image,
+                    'featured_image'  => $c->featured_image,
+                    'gallery_images'  => $c->gallery_images ?? [],
+                    'order'           => $c->order,
+                    'status'          => $c->status,
                 ]);
 
             return response()->json(['status' => true, 'data' => $categories]);
@@ -100,6 +107,39 @@ class ProductCategoryController extends Controller
         }
     }
 
+    /**
+     * Insert a category into its sibling group's order sequence at the
+     * requested position, then renumber the whole group sequentially
+     * (0, 1, 2, ...). This is what makes typing an "Order" value behave
+     * the same way dragging does — it repositions rather than just
+     * overwriting a single row's number (which can collide with a sibling
+     * and silently do nothing visible).
+     *
+     * $desiredOrder: 0-based target position within the group.
+     *                Pass PHP_INT_MAX (or omit) to push to the end.
+     */
+    private function normalizeOrderForGroup($parentId, $categoryId, $desiredOrder)
+    {
+        // All siblings in this parent group, excluding the one being placed
+        $siblingIds = ProductCategory::where('parent_id', $parentId)
+            ->where('id', '!=', $categoryId)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->pluck('id')
+            ->toArray();
+
+        // Clamp desired position into valid range [0, count]
+        $desiredOrder = max(0, min((int) $desiredOrder, count($siblingIds)));
+
+        // Insert the category id at that position
+        array_splice($siblingIds, $desiredOrder, 0, [$categoryId]);
+
+        // Renumber the whole group sequentially so there are never ties
+        foreach ($siblingIds as $index => $id) {
+            ProductCategory::where('id', $id)->update(['order' => $index]);
+        }
+    }
+
     // POST /ourproductcategories — create
     public function store(Request $request)
     {
@@ -115,6 +155,7 @@ class ProductCategoryController extends Controller
                 'gallery_images' => 'nullable|array',
                 'gallery_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
                 'parent_id'     => 'nullable|exists:product_categories,id',
+                'order'         => 'nullable|integer|min:0',
                 'status'        => 'boolean',
             ]);
 
@@ -149,8 +190,19 @@ class ProductCategoryController extends Controller
                 'icon_image'     => $iconPath,
                 'gallery_images' => $galleryPaths,
                 'parent_id'      => $validated['parent_id'] ?? null,
+                // Temp value — normalizeOrderForGroup() below fixes it up
+                // and resolves any collision with existing siblings.
+                'order'          => $validated['order'] ?? 0,
                 'status'         => $validated['status'] ?? true,
             ]);
+
+            // Reposition within the sibling group based on the requested
+            // order value (or push to the end if none was given).
+            $desiredOrder = array_key_exists('order', $validated) && $validated['order'] !== null
+                ? (int) $validated['order']
+                : PHP_INT_MAX;
+            $this->normalizeOrderForGroup($category->parent_id, $category->id, $desiredOrder);
+            $category->refresh();
 
             Log::create([
                 'name'       => auth()->user()?->name ?? 'Guest',
@@ -172,7 +224,9 @@ class ProductCategoryController extends Controller
 
     // POST /ourproductcategories/{id} (with _method=PUT) — update
     public function update(Request $request, $id)
+    
     {
+         \Log::info('UPDATE HIT with id: ' . $id . ' | route name: ' . optional($request->route())->getName());
         try {
             $category = ProductCategory::findOrFail($id);
 
@@ -189,6 +243,7 @@ class ProductCategoryController extends Controller
                 'remove_gallery_images' => 'nullable|array',
                 'remove_gallery_images.*' => 'integer',
                 'parent_id'     => 'nullable|exists:product_categories,id',
+                'order'         => 'nullable|integer|min:0',
                 'status'        => 'boolean',
             ]);
 
@@ -225,7 +280,7 @@ class ProductCategoryController extends Controller
             if ($request->has('remove_gallery_images')) {
                 $toRemove = $request->remove_gallery_images;
                 $remaining = [];
-                
+
                 foreach ($currentGallery as $index => $imagePath) {
                     if (!in_array($index, $toRemove)) {
                         $remaining[] = $imagePath;
@@ -247,6 +302,12 @@ class ProductCategoryController extends Controller
                 }
             }
 
+            // Track whether the parent group is changing, so we know which
+            // group to normalize the order against afterwards.
+            $newParentId = array_key_exists('parent_id', $validated)
+                ? $validated['parent_id']
+                : $category->parent_id;
+
             // Update category
             $category->update([
                 'name'           => $request->name ?? $category->name,
@@ -255,11 +316,21 @@ class ProductCategoryController extends Controller
                 'title'          => $request->title ?? $category->title,
                 'content'        => $request->content ?? $category->content,
                 'gallery_images' => $currentGallery,
-                'parent_id'      => array_key_exists('parent_id', $validated)
-                                    ? $validated['parent_id']
-                                    : $category->parent_id,
+                'parent_id'      => $newParentId,
+                'order'          => array_key_exists('order', $validated)
+                                        ? $validated['order']
+                                        : $category->order,
                 'status'         => $request->has('status') ? $request->status : $category->status,
             ]);
+
+            // Reposition within the (possibly new) sibling group so the
+            // typed Order value actually moves the row instead of just
+            // colliding silently with an existing sibling's order.
+            $desiredOrder = array_key_exists('order', $validated) && $validated['order'] !== null
+                ? (int) $validated['order']
+                : PHP_INT_MAX;
+            $this->normalizeOrderForGroup($category->parent_id, $category->id, $desiredOrder);
+            $category->refresh();
 
             Log::create([
                 'name'       => auth()->user()?->name ?? 'Guest',
@@ -298,12 +369,12 @@ class ProductCategoryController extends Controller
             if ($category->featured_image && Storage::disk('public')->exists($category->featured_image)) {
                 Storage::disk('public')->delete($category->featured_image);
             }
-            
+
             // Delete icon
             if ($category->icon_image && Storage::disk('public')->exists($category->icon_image)) {
                 Storage::disk('public')->delete($category->icon_image);
             }
-            
+
             // Delete all gallery images
             if (!empty($category->gallery_images)) {
                 foreach ($category->gallery_images as $imagePath) {
@@ -338,26 +409,83 @@ class ProductCategoryController extends Controller
         try {
             $category = ProductCategory::findOrFail($id);
             $galleryImages = $category->gallery_images ?? [];
-            
+
             if (!isset($galleryImages[$index])) {
                 return response()->json(['status' => false, 'message' => 'Image not found'], 404);
             }
-            
+
             $imagePath = $galleryImages[$index];
-            
+
             // Delete the file
             if (Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
-            
+
             // Remove from array
             unset($galleryImages[$index]);
             $category->gallery_images = array_values($galleryImages); // Reindex array
             $category->save();
-            
+
             return response()->json(['status' => true, 'message' => 'Image deleted successfully']);
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    // POST /ourproductcategories/reorder — persist drag-and-drop order
+    // Expects: { "items": [{ "id": 1, "order": 0 }, { "id": 2, "order": 1 }, ...] }
+    // All items in a single request are assumed to belong to the same
+    // parent group (this matches the frontend's per-group drag behavior).
+    // public function reorder(Request $request)
+    // {
+        
+    //     try {
+    //         $validated = $request->validate([
+    //             'items'            => 'required|array|min:1',
+    //             'items.*.id'       => 'required|integer|exists:product_categories,id',
+    //             'items.*.order'    => 'required|integer|min:0',
+    //         ]);
+
+    //         foreach ($validated['items'] as $item) {
+    //             ProductCategory::where('id', $item['id'])->update(['order' => $item['order']]);
+    //         }
+
+    //         return response()->json([
+    //             'status'  => true,
+    //             'message' => 'Order updated successfully',
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         LaravelLog::error('Error reordering product categories: ' . $e->getMessage());
+    //         return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+    //     }
+    // }
+
+
+    public function reorder(Request $request)
+{
+    LaravelLog::info('REORDER PAYLOAD', $request->all());
+
+    try {
+        $validated = $request->validate([
+            'items'            => 'required|array|min:1',
+            'items.*.id'       => 'required|integer|exists:product_categories,id',
+            'items.*.order'    => 'required|integer|min:0',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            ProductCategory::where('id', $item['id'])->update(['order' => $item['order']]);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Order updated successfully',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        LaravelLog::error('Reorder VALIDATION error: ' . json_encode($e->errors()));
+        return response()->json(['status' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        LaravelLog::error('Error reordering product categories: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
+        return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 }

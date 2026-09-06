@@ -20,6 +20,7 @@ return new class extends Migration
         $table->string('featured_image')->nullable();
         $table->string('icon_image')->nullable();
         $table->foreignId('parent_id')->nullable()->constrained('product_categories')->nullOnDelete();
+        
         $table->boolean('status')->default(true);
         $table->softDeletes();
         $table->timestamps();

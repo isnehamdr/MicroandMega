@@ -33,6 +33,7 @@ const AddCategory = ({
         icon_image: null,
         featured_image: null,
         parent_id: "",
+        order: "",
         status: true,
     });
 
@@ -49,29 +50,30 @@ const AddCategory = ({
         }
     }, [existingCategories]);
 
-    useEffect(() => {
-        if (editingCategory) {
-            setCategoryForm({
-                name: editingCategory.name || "",
-                slug: editingCategory.slug || "",
-                description: editingCategory.description || "",
-                title: editingCategory.title || "",
-                content: editingCategory.content || "",
-                icon_image: null,
-                featured_image: null,
-                parent_id: editingCategory.parent_id || "",
-                status: editingCategory.status ?? true,
-            });
-            setCategoriesError("");
-            setSlugTouched(true);
-        } else {
-            setCategoryForm({
-                name: "", slug: "", description: "", title: "", content: "",
-                icon_image: null, featured_image: null, parent_id: "", status: true,
-            });
-            setSlugTouched(false);
-        }
-    }, [editingCategory]);
+   useEffect(() => {
+    if (editingCategory) {
+        setCategoryForm({
+            name: editingCategory.name || "",
+            slug: editingCategory.slug || "",
+            description: editingCategory.description || "",
+            title: editingCategory.title || "",
+            content: editingCategory.content || "",
+            icon_image: null,
+            featured_image: null,
+            parent_id: editingCategory.parent_id || "",
+            order: editingCategory.order ?? "",
+            status: editingCategory.status ?? true,
+        });
+        setCategoriesError("");
+        setSlugTouched(true);
+    } else {
+        setCategoryForm({
+            name: "", slug: "", description: "", title: "", content: "",
+            icon_image: null, featured_image: null, parent_id: "", order: "", status: true,
+        });
+        setSlugTouched(false);
+    }
+}, [editingCategory]);
 
     const fetchCategories = async () => {
         try {
@@ -155,19 +157,21 @@ const AddCategory = ({
         if (!categoryForm.name.trim()) { alert("Category name is required"); return; }
         if (!categoryForm.slug.trim()) { alert("Slug is required"); return; }
 
-        const formData = new FormData();
-        for (const key in categoryForm) {
-            if (key === "icon_image" || key === "featured_image") {
-                if (categoryForm[key]) formData.append(key, categoryForm[key]);
-            } else if (key === "parent_id") {
-                if (categoryForm.parent_id !== "" && categoryForm.parent_id !== null)
-                    formData.append("parent_id", categoryForm.parent_id);
-            } else if (key === "status") {
-                formData.append("status", categoryForm.status ? "1" : "0");
-            } else if (categoryForm[key] !== null && categoryForm[key] !== "") {
-                formData.append(key, categoryForm[key]);
-            }
-        }
+       const formData = new FormData();
+for (const key in categoryForm) {
+    if (key === "icon_image" || key === "featured_image") {
+        if (categoryForm[key]) formData.append(key, categoryForm[key]);
+    } else if (key === "parent_id") {
+        if (categoryForm.parent_id !== "" && categoryForm.parent_id !== null)
+            formData.append("parent_id", categoryForm.parent_id);
+    } else if (key === "status") {
+        formData.append("status", categoryForm.status ? "1" : "0");
+    } else if (key === "order") {
+        formData.append("order", categoryForm.order === "" ? 0 : categoryForm.order);
+    } else if (categoryForm[key] !== null && categoryForm[key] !== "") {
+        formData.append(key, categoryForm[key]);
+    }
+}
 
         try {
             setSubmitting(true);
@@ -341,6 +345,21 @@ const AddCategory = ({
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex flex-col gap-1.5">
+    <label className={labelClass}>Order</label>
+    <p className={hintClass}>Lower numbers appear first.</p>
+    <input
+        type="number"
+        name="order"
+        min="0"
+        value={categoryForm.order}
+        onChange={handleChange}
+        placeholder="0"
+        className={inputClass}
+    />
+</div>
+
 
                     {/* ── Section 2: Content ── */}
                     <div className="flex flex-col gap-6">

@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'title',
