@@ -38,6 +38,8 @@ class ProductCategoryController extends Controller
         }
     }
 
+
+    
     public function index()
     {
         try {
@@ -432,33 +434,6 @@ class ProductCategoryController extends Controller
         }
     }
 
-    // POST /ourproductcategories/reorder — persist drag-and-drop order
-    // Expects: { "items": [{ "id": 1, "order": 0 }, { "id": 2, "order": 1 }, ...] }
-    // All items in a single request are assumed to belong to the same
-    // parent group (this matches the frontend's per-group drag behavior).
-    // public function reorder(Request $request)
-    // {
-        
-    //     try {
-    //         $validated = $request->validate([
-    //             'items'            => 'required|array|min:1',
-    //             'items.*.id'       => 'required|integer|exists:product_categories,id',
-    //             'items.*.order'    => 'required|integer|min:0',
-    //         ]);
-
-    //         foreach ($validated['items'] as $item) {
-    //             ProductCategory::where('id', $item['id'])->update(['order' => $item['order']]);
-    //         }
-
-    //         return response()->json([
-    //             'status'  => true,
-    //             'message' => 'Order updated successfully',
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         LaravelLog::error('Error reordering product categories: ' . $e->getMessage());
-    //         return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
-    //     }
-    // }
 
 
     public function reorder(Request $request)

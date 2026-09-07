@@ -30,6 +30,14 @@
 
 // const imgurl = import.meta.env.VITE_IMAGE_PATH;
 
+// // Category slug -> hero banner image map
+// const categoryBgMap = {
+//     "public-audio-system": "/images/publicaudiobg.jpeg",
+//     // "fire-alarm": "/images/firealarmbg.jpeg",
+//     // "cctv": "/images/cctvbg.jpeg",
+// };
+// const DEFAULT_HERO_BG = "/images/about-bg.jpg";
+
 // function orderByOldestFirst(list) {
 //     if (!Array.isArray(list)) return list;
 //     return [...list].sort((a, b) => {
@@ -509,6 +517,18 @@
 //         setActiveImage(productImages[0] || null);
 //     }, [productImages]);
 
+//     // Hero background image based on active category/product's category slug.
+//     // IMPORTANT: this hook must stay ABOVE the `if (loading) return ...` below,
+//     // so it always runs on every render (Rules of Hooks).
+//     const heroBgImage = useMemo(() => {
+//         const activeCategorySlug =
+//             selectedProduct?.category?.slug ||
+//             selectedCategory?.slug ||
+//             null;
+
+//         return categoryBgMap[activeCategorySlug] || DEFAULT_HERO_BG;
+//     }, [selectedProduct, selectedCategory]);
+
 //     const pageTitle =
 //         selectedProduct?.category?.name ||
 //         selectedCategory?.name          ||
@@ -536,6 +556,7 @@
 //     // SSR-safe canonical URL
 //     const seoUrl = typeof window !== "undefined" ? window.location.href : "";
 
+//     // ── Early return AFTER all hooks are declared ─────────────────────────────
 //     if (loading) {
 //         return (
 //             <div className="min-h-screen flex items-center justify-center">
@@ -573,7 +594,7 @@
 //             {/* Hero Banner */}
 //             <div
 //                 className="relative flex min-h-[300px] items-center justify-center bg-cover bg-center bg-no-repeat px-6 py-12 sm:min-h-[380px] lg:min-h-[460px] lg:bg-fixed"
-//                 style={{ backgroundImage: "url('/images/about-bg.jpg')" }}
+//                 style={{ backgroundImage: `url('${heroBgImage}')` }}
 //             >
 //                 <div className="absolute inset-0 bg-gray-900/70 pointer-events-none" />
 //                 <div className="relative z-20 flex flex-col items-center text-center gap-3">
@@ -753,16 +774,16 @@ const categoryBgMap = {
 };
 const DEFAULT_HERO_BG = "/images/about-bg.jpg";
 
-function orderByOldestFirst(list) {
+// Sorts by the backend-controlled `order` field (drag-and-drop / admin
+// value) instead of creation date. Falls back to id as a stable tie-breaker
+// when two items share the same order value.
+function orderByFieldOrder(list) {
     if (!Array.isArray(list)) return list;
     return [...list].sort((a, b) => {
-        const aKey = a?.created_at ?? a?.createdAt ?? a?.id;
-        const bKey = b?.created_at ?? b?.createdAt ?? b?.id;
-        const aTime = aKey ? new Date(aKey).getTime() : NaN;
-        const bTime = bKey ? new Date(bKey).getTime() : NaN;
-        if (!Number.isNaN(aTime) && !Number.isNaN(bTime)) return aTime - bTime;
-        if (typeof aKey === "number" && typeof bKey === "number") return aKey - bKey;
-        return 0;
+        const aOrder = a?.order ?? 0;
+        const bOrder = b?.order ?? 0;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (a?.id ?? 0) - (b?.id ?? 0);
     });
 }
 
@@ -1074,8 +1095,9 @@ export default function ProductDetailPage() {
                 title:             cat.title             || "",
                 content:           cat.content           || "",
                 created_at:        cat.created_at        || null,
+                order:             cat.order             ?? 0,
                 additional_images: cat.additional_images || [],
-                children: orderByOldestFirst((cat.children ?? []).map((child) => ({
+                children: orderByFieldOrder((cat.children ?? []).map((child) => ({
                     id:                child.id,
                     name:              child.name,
                     slug:              child.slug,
@@ -1085,10 +1107,11 @@ export default function ProductDetailPage() {
                     title:             child.title             || "",
                     content:           child.content           || "",
                     created_at:        child.created_at        || null,
+                    order:             child.order             ?? 0,
                     additional_images: child.additional_images || [],
                 }))),
             }));
-            const ordered = orderByOldestFirst(transformed);
+            const ordered = orderByFieldOrder(transformed);
             setCategories(ordered);
             return ordered;
         } catch (err) {
@@ -1101,7 +1124,7 @@ export default function ProductDetailPage() {
         try {
             const res     = await axios.get("/ourproducts");
             const list    = res.data?.data || res.data || [];
-            const ordered = orderByOldestFirst(list);
+            const ordered = orderByFieldOrder(list);
             setAllProducts(ordered);
             return ordered;
         } catch (err) {
@@ -1189,7 +1212,7 @@ export default function ProductDetailPage() {
                 const res = await axios.get(`/ourproducts/category/${selectedCategory.slug}`);
                 if (!cancelled) {
                     const list = res.data?.data || [];
-                    setCategoryProducts(orderByOldestFirst(list));
+                    setCategoryProducts(orderByFieldOrder(list));
                 }
             } catch {
                 if (!cancelled) setCategoryProducts([]);
@@ -1209,13 +1232,13 @@ export default function ProductDetailPage() {
             const slug = p?.category?.slug;
             if (!slug) return acc;
             if (!acc[slug]) acc[slug] = [];
-            acc[slug].push({ id: p.id, name: p.name, slug: p.slug });
+            acc[slug].push({ id: p.id, name: p.name, slug: p.slug, order: p.order ?? 0 });
             return acc;
         }, {});
 
         return categories.map((cat) => ({
             ...cat,
-            products: orderByOldestFirst(byCategorySlug[cat.slug] || []),
+            products: orderByFieldOrder(byCategorySlug[cat.slug] || []),
         }));
     }, [categories, allProducts]);
 
@@ -1447,3 +1470,4 @@ export default function ProductDetailPage() {
         </>
     );
 }
+

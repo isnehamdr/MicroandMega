@@ -163,14 +163,14 @@ const Products = () => {
                             className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
                         >
                             <Pencil size={13} />
-                            Edit
+                           
                         </button>
                         <button
                             onClick={() => handleDelete(row.original.id)}
                             className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
                         >
                             <Trash2 size={13} />
-                            Delete
+                           
                         </button>
                     </div>
                 ),

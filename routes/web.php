@@ -78,14 +78,16 @@ Route::middleware('auth')->group(function () {
 
     // Product Categories (Admin)
     Route::prefix('ourproductcategories')->group(function () {
+         Route::post('/reorder', [ProductCategoryController::class, 'reorder'])->name('ourproductcategories.reorder');
         Route::post('/', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
-        Route::post('/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
+        // Route::post('/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
+        Route::put('/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
         Route::delete('/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
         Route::delete('/{id}/images/{imageId}', [ProductCategoryController::class, 'destroyImage'])
             ->name('ourproductcategories.images.destroy');
     });
 
-    Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
+    // Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
     // Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
     // Route::put('/ourproductcategories/{id}', [ProductCategoryController::class, 'update'])->name('ourproductcategories.update');
     // Route::delete('/ourproductcategories/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
@@ -145,17 +147,8 @@ Route::prefix('ourproductcategories')->group(function () {
  
 });
 
-Route::resource('ourproductcategories', ProductCategoryController::class);
-Route::post('/ourproductcategories/reorder', [ProductCategoryController::class, 'reorder']);
-//    Route::post('ourproductcategories/reorder', [ProductCategoryController::class, 'reorder']);
 
-// Route::get('/category/{categorySlug}', function ($categorySlug) {
-//     return Inertia::render('ProductDetailPage', ['categorySlug' => $categorySlug]);
-// })->name('products.category');
 
-// Route::get('/products/{slug}', function ($slug) {
-//     return Inertia::render('ProductDetailPage', ['productSlug' => $slug]);
-// })->name('products.show');
 
 Route::get('/category/{categorySlug}', [ProductCategoryController::class, 'showPage'])->name('products.category');
 Route::get('/products/{slug}', [ProductController::class, 'showPage'])->name('products.show');
@@ -177,9 +170,6 @@ Route::get('/projects-page', function () {
     return Inertia::render('ProjectsPage');
 })->name('projects.page');
 
-// Route::get('/project-details/{slug}', function ($slug) {
-//     return Inertia::render('ProjectDetailPage', ['slug' => $slug]);
-// })->name('project.details');
 
 
 Route::get('/project-details/{slug}', [ProjectController::class, 'showPage'])->name('project.details');
