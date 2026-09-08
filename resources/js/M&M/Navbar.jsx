@@ -11,7 +11,7 @@ const slugify = (value) =>
     .replace(/^-+|-+$/g, '')
 
 const PRODUCTS_MENU = [
-  {name:'Automation / Home Automation', slug:'automation'},
+  {name:'Automation / Home Automation', slug:'home-automation'},
   {name:'Fire Alarm', slug:'fire-detection-notification-and-suppression'},
   {name:'Public Address', slug:'public-audio-system'},
   {name:'Access Control', slug:'modern-access-control-systems',},
