@@ -131,6 +131,9 @@ public function store(Request $request)
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     'product_category_id' => 'required|exists:product_categories,id', // ← changed
             'status' => 'boolean',
+            'stock_status' => 'nullable|integer|min:0',
+            'low_stock_threshold' => 'nullable|integer|min:0',
+            'price'=> 'required|numeric|min:0',
         ]);
 
         $featuredImagePath = null;
@@ -139,6 +142,7 @@ public function store(Request $request)
         }
 
         $product = Product::create([
+            
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'title' => $validated['title'] ?? null,
@@ -146,8 +150,16 @@ public function store(Request $request)
             'featured_image' => $featuredImagePath,
     'product_category_id' => $validated['product_category_id'], // ← changed
             'status' => $validated['status'] ?? true,
+            'stock_quantity'      => $validated['stock_quantity'] ?? 0,
+'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
+'price'               => $validated['price'],
         ]);
 
+
+        $product->recomputeStockStatus();
+$product->save();
+
+        
         // Handle multiple images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
@@ -201,6 +213,9 @@ public function update(Request $request, $id)
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     'product_category_id' => 'required|exists:product_categories,id', // ← changed
             'status' => 'boolean',
+            'stock_quantity'      => 'nullable|integer|min:0',
+'low_stock_threshold' => 'nullable|integer|min:0',
+'price'               => 'sometimes|numeric|min:0',
         ]);
 
         // Update featured image if provided
@@ -219,9 +234,14 @@ public function update(Request $request, $id)
             'content' => $request->content ?? $product->content,
     'product_category_id' => $request->product_category_id,
             'status' => $request->status ?? $product->status,
+            'stock_quantity'      => $request->stock_quantity ?? $product->stock_quantity,
+'low_stock_threshold' => $request->low_stock_threshold ?? $product->low_stock_threshold,
+'price'               => $request->price ?? $product->price,
         ];
         
         $product->update($updateData);
+        $product->recomputeStockStatus();
+$product->save();
 
         // Handle new images if provided
         if ($request->hasFile('images')) {
@@ -302,4 +322,36 @@ public function update(Request $request, $id)
             ], 500);
         }
     }
+
+
+
+    // PATCH /ourproducts/{id}/restock
+public function restock(Request $request, $id)
+{
+    try {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'stock_quantity' => 'required|integer|min:0',
+        ]);
+
+        $product->stock_quantity = $validated['stock_quantity'];
+        $product->recomputeStockStatus();
+        $product->save();
+
+        \App\Models\Log::create([
+            'name'       => auth()->user()?->name ?? 'Guest',
+            'ip_address' => $request->ip(),
+            'title'      => "Product Restocked: {$product->name} → {$product->stock_quantity} units",
+        ]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Stock updated successfully',
+            'data'    => $product->fresh(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 }

@@ -1,5 +1,3 @@
-
-
 import AddProducts from "@/AddForm/AddProducts";
 import AdminWrapper from "@/AdminDashboard/AdminWrapper";
 import MyTable from "@/MyTable/MyTable";
@@ -8,7 +6,6 @@ import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 
 const imgurl = import.meta.env.VITE_IMAGE_PATH;
-
 
 const Products = () => {
     const [allProducts, setAllProducts] = useState([]);
@@ -23,6 +20,34 @@ const Products = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
 
+    const [restockingProduct, setRestockingProduct] = useState(null);
+    const [restockValue, setRestockValue] = useState(0);
+    const [restockSubmitting, setRestockSubmitting] = useState(false);
+
+    const openRestock = (product) => {
+        setRestockingProduct(product);
+        setRestockValue(product.stock_quantity ?? 0);
+    };
+
+    const handleRestockSubmit = async (e) => {
+        e.preventDefault();
+        if (!restockingProduct) return;
+        try {
+            setRestockSubmitting(true);
+            await axios.patch(
+                route("ourproducts.restock", { id: restockingProduct.id }),
+                { stock_quantity: Number(restockValue) }
+            );
+            setReloadTrigger((prev) => !prev);
+            setRestockingProduct(null);
+        } catch (error) {
+            console.log("Error restocking product", error);
+            alert(error?.response?.data?.message || "Error updating stock.");
+        } finally {
+            setRestockSubmitting(false);
+        }
+    };
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -35,7 +60,6 @@ const Products = () => {
         };
         fetchProducts();
     }, [reloadTrigger]);
-   
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -152,6 +176,54 @@ const Products = () => {
                     <span className="text-gray-600">{value || "—"}</span>
                 ),
             },
+
+            // ========== PRICE COLUMN ==========
+            {
+                Header: "Price",
+                accessor: "price",
+                Cell: ({ value }) => (
+                    <span className="font-medium text-gray-800">
+                        {value !== null && value !== undefined
+                            ? `Rs. ${Number(value).toLocaleString("en-NP", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                              })}`
+                            : "—"}
+                    </span>
+                ),
+            },
+            // ==================================
+
+            {
+                Header: "Stock",
+                accessor: "stock_quantity",
+                Cell: ({ row, value }) => {
+                    const status = row.original.stock_status;
+                    const badge =
+                        status === "out_of_stock"
+                            ? "bg-red-100 text-red-700"
+                            : status === "low_stock"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-green-100 text-green-700";
+                    const label =
+                        status === "out_of_stock"
+                            ? "Out of Stock"
+                            : status === "low_stock"
+                            ? "Low Stock"
+                            : "In Stock";
+                    return (
+                        <div className="flex items-center gap-2">
+                            <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge}`}
+                            >
+                                {label}
+                            </span>
+                            <span className="text-gray-600 text-sm">({value ?? 0})</span>
+                        </div>
+                    );
+                },
+            },
+
             {
                 Header: "Actions",
                 id: "actions",
@@ -159,18 +231,22 @@ const Products = () => {
                 Cell: ({ row }) => (
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={() => openRestock(row.original)}
+                            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
+                        >
+                            Restock
+                        </button>
+                        <button
                             onClick={() => handleEdit(row.original)}
                             className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
                         >
                             <Pencil size={13} />
-                           
                         </button>
                         <button
                             onClick={() => handleDelete(row.original.id)}
                             className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
                         >
                             <Trash2 size={13} />
-                           
                         </button>
                     </div>
                 ),
@@ -217,7 +293,8 @@ const Products = () => {
                         <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
                     </div>
                     <span className="text-sm text-gray-500">
-                        {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+                        {filteredProducts.length} product
+                        {filteredProducts.length !== 1 ? "s" : ""}
                     </span>
                 </div>
 
@@ -225,6 +302,13 @@ const Products = () => {
                 <MyTable
                     columns={columns}
                     data={paginatedData}
+                    rowClassName={(row) =>
+                        row.stock_status === "out_of_stock"
+                            ? "bg-red-50"
+                            : row.stock_status === "low_stock"
+                            ? "bg-yellow-50"
+                            : ""
+                    }
                     pagination={{
                         currentPage,
                         lastPage,
@@ -241,7 +325,9 @@ const Products = () => {
                 {filteredProducts.length === 0 && (
                     <div className="text-center py-16 text-gray-400">
                         <p className="text-lg font-medium">No products found</p>
-                        <p className="text-sm mt-1">Try changing the category filter or add a new product.</p>
+                        <p className="text-sm mt-1">
+                            Try changing the category filter or add a new product.
+                        </p>
                     </div>
                 )}
 
@@ -254,6 +340,49 @@ const Products = () => {
                         setReloadTrigger={setReloadTrigger}
                         handleUpdate={handleUpdate}
                     />
+                )}
+
+                {/* Restock Modal */}
+                {restockingProduct && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl w-full max-w-sm p-6 shadow-2xl">
+                            <h3 className="text-lg font-bold text-gray-800 mb-1">
+                                Restock Product
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                {restockingProduct.name}
+                            </p>
+                            <form onSubmit={handleRestockSubmit}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    New Stock Quantity
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={restockValue}
+                                    onChange={(e) => setRestockValue(e.target.value)}
+                                    autoFocus
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 mb-5"
+                                />
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setRestockingProduct(null)}
+                                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={restockSubmitting}
+                                        className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition disabled:opacity-50"
+                                    >
+                                        {restockSubmitting ? "Saving..." : "Update Stock"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 )}
             </div>
         </AdminWrapper>

@@ -8,12 +8,12 @@
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #bb1403;">New Order Received!</h2>
 
-        <p><strong>Order:</strong> {{ $order->order_number }}</p>
+        <p><strong>Order ID:</strong> #{{ $order->id }}</p>
         <p><strong>Customer:</strong> {{ $order->customer_name }}</p>
         <p><strong>Email:</strong> {{ $order->customer_email }}</p>
         <p><strong>Phone:</strong> {{ $order->customer_phone ?? 'N/A' }}</p>
-        <p><strong>Address:</strong> {{ $order->shipping_address ?? 'N/A' }}</p>
-        <p><strong>Total:</strong> Rs. {{ number_format($order->grand_total, 2) }}</p>
+        <p><strong>Address:</strong> {{ $order->address }}</p>
+        <p><strong>Total:</strong> Rs. {{ number_format($order->total, 2) }}</p>
 
         <h3>Items:</h3>
         <ul>

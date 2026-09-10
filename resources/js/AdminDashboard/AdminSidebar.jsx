@@ -16,6 +16,7 @@ import {
     Ticket,
     Activity,
     UserCircle,
+    ClipboardList,
     FolderTree, // Add this import
 } from "lucide-react";
 
@@ -258,6 +259,47 @@ const SideBar = ({
                             </div>
                         )}
                     </Link>
+
+                  
+{/* Orders - Using ClipboardList icon */}
+<Link
+    href="/orders"
+    className={`
+        flex items-center rounded-lg transition-colors duration-200 group relative
+        ${isCollapsed ? "p-3 justify-center" : "p-3"}
+        ${
+            isActive("/orders")
+                ? "bg-gray-200 text-gray-600"
+                : "text-gray-600 hover:bg-gray-50"
+        }
+    `}
+    title={isCollapsed ? "Orders" : ""}
+>
+    <ClipboardList
+        className={`
+            w-5 h-5
+            ${
+                isActive("/orders")
+                    ? "text-gray-600"
+                    : "text-gray-500 group-hover:text-gray-700"
+            }
+        `}
+    />
+
+    {!isCollapsed && (
+        <span className="ml-3 font-medium whitespace-nowrap">
+            Orders
+        </span>
+    )}
+
+    {isCollapsed && (
+        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            Orders
+        </div>
+    )}
+</Link>
+
+
 
                     {/* Projects - Using FolderKanban icon */}
                     <Link

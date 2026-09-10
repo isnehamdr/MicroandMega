@@ -9,6 +9,8 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ServiceTicketController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrderController;
 use App\Models\Product;
 use App\Models\Project;
 use Illuminate\Foundation\Application;
@@ -58,6 +60,11 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('AdminPages/HeroSection');
     });
 
+
+Route::get('/ournotifications', [NotificationController::class, 'index'])->name('ournotifications.index');
+Route::patch('/ournotifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('ournotifications.read');
+Route::patch('/ournotifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('ournotifications.readAll');
+
     Route::post('/ourhero', [HeroSectionController::class, 'store'])->name('ourhero.store');
     Route::put('/ourhero/{heroSection}', [HeroSectionController::class, 'update'])->name('ourhero.update');
     Route::delete('/ourhero/{heroSection}', [HeroSectionController::class, 'destroy'])->name('ourhero.destroy');
@@ -85,7 +92,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [ProductCategoryController::class, 'destroy'])->name('ourproductcategories.destroy');
         Route::delete('/{id}/images/{imageId}', [ProductCategoryController::class, 'destroyImage'])
             ->name('ourproductcategories.images.destroy');
+            Route::patch('/ourproducts/{id}/restock', [ProductController::class, 'restock'])
+    ->name('ourproducts.restock');
     });
+
 
     // Route::get('/ourproductcategories', [ProductCategoryController::class, 'index'])->name('ourproductcategories.index');
     // Route::post('/ourproductcategories', [ProductCategoryController::class, 'store'])->name('ourproductcategories.store');
@@ -118,8 +128,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/ourservicetickets', [ServiceTicketController::class, 'index'])->name('ourservicetickets.index');
     Route::put('/ourservicetickets/{id}', [ServiceTicketController::class, 'update'])->name('ourservicetickets.update');   // ← ADD THIS
 
+Route::get('/ourorders', [OrderController::class, 'index'])->name('ourorders.index');
+Route::get('/ourorders/{id}', [OrderController::class, 'show'])->name('ourorders.show');
+Route::put('/ourorders/{id}', [OrderController::class, 'update'])->name('ourorders.update');
+
+
+Route::get('/orders', function () {
+    return Inertia::render('AdminPages/Orders');
 });
 
+
+});
+
+Route::get('/shop', function () {
+    return Inertia::render('Shop');
+})->name('shop');
+
+Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
 
     Route::get('/ourhero', [HeroSectionController::class, 'index'])->name('ourhero.index');
 

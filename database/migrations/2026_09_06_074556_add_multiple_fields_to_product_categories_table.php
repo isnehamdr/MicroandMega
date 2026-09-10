@@ -9,12 +9,12 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('product_categories', function (Blueprint $table) {
-             $table->integer('order')->default(0)->after('id')->nullable();
-        });
-    }
+    // public function up(): void
+    // {
+    //     Schema::table('product_categories', function (Blueprint $table) {
+    //          $table->integer('order')->default(0)->after('id')->nullable();
+    //     });
+    // }
 
     /**
      * Reverse the migrations.

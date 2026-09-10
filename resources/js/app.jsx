@@ -8,6 +8,7 @@ import SiteLayout from '@/Layouts/SiteLayout';
 import { useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { CartProvider } from './Context/CartContext'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Micro & Mega';
 
@@ -34,33 +35,37 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        const AppWithGsap = (appProps) => {
-            useEffect(() => {
-                const onStart = () => {
-                    if (ScrollTrigger && ScrollTrigger.getAll) {
-                        ScrollTrigger.getAll().forEach((t) => t.kill());
-                    }
-                };
-                const onFinish = () => {
-                    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-                    requestAnimationFrame(() => {
-                        if (ScrollTrigger && ScrollTrigger.refresh) {
-                            ScrollTrigger.refresh();
-                        }
-                    });
-                };
-
-                const offStart = router.on('start', onStart);
-                const offFinish = router.on('finish', onFinish);
-
-                return () => {
-                    offStart();
-                    offFinish();
-                };
-            }, []);
-
-            return <App {...appProps} />;
+      const AppWithGsap = (appProps) => {
+    useEffect(() => {
+        const onStart = () => {
+            if (ScrollTrigger && ScrollTrigger.getAll) {
+                ScrollTrigger.getAll().forEach((t) => t.kill());
+            }
         };
+        const onFinish = () => {
+            window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+            requestAnimationFrame(() => {
+                if (ScrollTrigger && ScrollTrigger.refresh) {
+                    ScrollTrigger.refresh();
+                }
+            });
+        };
+
+        const offStart = router.on('start', onStart);
+        const offFinish = router.on('finish', onFinish);
+
+        return () => {
+            offStart();
+            offFinish();
+        };
+    }, []);
+
+    return (
+        <CartProvider>
+            <App {...appProps} />
+        </CartProvider>
+    );
+};
 
         root.render(<AppWithGsap {...props} />);
     },
