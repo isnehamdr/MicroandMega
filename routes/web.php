@@ -11,6 +11,7 @@ use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CouponController;
 use App\Models\Product;
 use App\Models\Project;
 use Illuminate\Foundation\Application;
@@ -138,11 +139,26 @@ Route::get('/orders', function () {
 });
 
 
+
+Route::get('/ourcoupons', [CouponController::class, 'index'])->name('ourcoupons.index');
+Route::post('/ourcoupons', [CouponController::class, 'store'])->name('ourcoupons.store');
+Route::put('/ourcoupons/{id}', [CouponController::class, 'update'])->name('ourcoupons.update');
+Route::delete('/ourcoupons/{id}', [CouponController::class, 'destroy'])->name('ourcoupons.destroy');
+
+
+Route::get('/coupons', function () {
+    return Inertia::render('AdminPages/Coupons');
+});
+
+
 });
 
 Route::get('/shop', function () {
     return Inertia::render('Shop');
 })->name('shop');
+
+
+Route::post('/coupons/validate', [CouponController::class, 'validateCode'])->name('coupons.validate');
 
 Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
 

@@ -17,7 +17,8 @@ import {
     Activity,
     UserCircle,
     ClipboardList,
-    FolderTree, // Add this import
+    FolderTree,
+    Tag, // Add this import
 } from "lucide-react";
 
 
@@ -295,6 +296,48 @@ const SideBar = ({
     {isCollapsed && (
         <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
             Orders
+        </div>
+    )}
+</Link>
+
+
+
+
+
+{/* Coupons - Using Tag icon */}
+<Link
+    href="/coupons"
+    className={`
+        flex items-center rounded-lg transition-colors duration-200 group relative
+        ${isCollapsed ? "p-3 justify-center" : "p-3"}
+        ${
+            isActive("/coupons")
+                ? "bg-gray-200 text-gray-600"
+                : "text-gray-600 hover:bg-gray-50"
+        }
+    `}
+    title={isCollapsed ? "Coupons" : ""}
+>
+    <Tag
+        className={`
+            w-5 h-5
+            ${
+                isActive("/coupons")
+                    ? "text-gray-600"
+                    : "text-gray-500 group-hover:text-gray-700"
+            }
+        `}
+    />
+
+    {!isCollapsed && (
+        <span className="ml-3 font-medium whitespace-nowrap">
+            Coupons
+        </span>
+    )}
+
+    {isCollapsed && (
+        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            Coupons
         </div>
     )}
 </Link>

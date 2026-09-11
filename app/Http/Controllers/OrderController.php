@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -25,7 +26,6 @@ class OrderController extends Controller
                 'customer_phone'    => 'nullable|string|max:30',
                 'shipping_address'  => 'nullable|string',
                 'coupon_code'       => 'nullable|string',
-                'discount'          => 'nullable|integer|min:0',
                 'shipping_fee'      => 'nullable|integer|min:0',
                 'items'             => 'required|array|min:1',
                 'items.*.id'        => 'required|integer|exists:products,id',
@@ -36,10 +36,37 @@ class OrderController extends Controller
             ]);
 
             $order = DB::transaction(function () use ($validated, $request) {
+
+                // Recompute subtotal server-side from validated item data —
+                // never trust a client-supplied subtotal/discount directly.
                 $subtotal = collect($validated['items'])
                     ->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-                $discount    = $validated['discount'] ?? 0;
+                $discount   = 0;
+                $couponCode = null;
+
+                if (!empty($validated['coupon_code'])) {
+                    // lockForUpdate prevents a race condition where two
+                    // simultaneous orders both read used_count before either
+                    // increments it, letting a coupon exceed its usage_limit.
+                    $coupon = Coupon::whereRaw('UPPER(code) = ?', [strtoupper($validated['coupon_code'])])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($coupon) {
+                        [$isValid] = $coupon->isValidFor($subtotal);
+                        if ($isValid) {
+                            $discount   = $coupon->calculateDiscount($subtotal);
+                            $couponCode = $coupon->code;
+                            $coupon->increment('used_count');
+                        }
+                    }
+                    // If the coupon is missing/invalid/expired, we silently
+                    // apply no discount rather than failing the whole order —
+                    // the frontend already validates before allowing checkout,
+                    // this is just the server-side safety net.
+                }
+
                 $shippingFee = $validated['shipping_fee'] ?? 0;
                 $grandTotal  = max(0, $subtotal - $discount) + $shippingFee;
 
@@ -53,7 +80,7 @@ class OrderController extends Controller
                     'customer_phone'   => $validated['customer_phone'] ?? null,
                     'shipping_address' => $validated['shipping_address'] ?? null,
                     'subtotal'         => $subtotal,
-                    'coupon_code'      => $validated['coupon_code'] ?? null,
+                    'coupon_code'      => $couponCode,
                     'discount'         => $discount,
                     'shipping_fee'     => $shippingFee,
                     'grand_total'      => $grandTotal,

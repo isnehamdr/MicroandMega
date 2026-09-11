@@ -106,7 +106,7 @@ function ProductCard({ product }) {
         >
             {/* Image */}
             <Link
-                href={`/category/${product.slug}`}
+               href={`/products/${product.slug}`}
                 className="relative w-full h-48 overflow-hidden bg-gray-50 flex items-center justify-center flex-shrink-0"
             >
                 {image ? (
@@ -140,7 +140,7 @@ function ProductCard({ product }) {
 
             {/* Content */}
             <div className="p-4 flex flex-col flex-1">
-                <Link href={`/category/${product.slug}`}>
+                <Link href={`/products/${product.slug}`}>
                     <h3 className="font-bold text-sm text-gray-800 mb-1 group-hover:text-red-700 transition-colors leading-snug line-clamp-2">
                         {product.title || product.name}
                     </h3>
@@ -163,7 +163,7 @@ function ProductCard({ product }) {
                         {formatPrice(product.price)}
                     </span>
                     <Link
-                        href={`/category/${product.slug}`}
+                        href={`/products/${product.slug}`}
                         className="text-xs font-bold text-red-600 uppercase tracking-wide hover:underline"
                     >
                         View Details →
